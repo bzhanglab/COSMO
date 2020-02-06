@@ -1,0 +1,11 @@
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+install.packages("remotes")
+BiocManager::install("missForest")
+BiocManager::install("biomaRt")
+BiocManager::install("glmnet")
+install.packages("caret")
+install.packages("tidyverse")
+install.packages("optparse")
+install.packages("doParallel")
+
