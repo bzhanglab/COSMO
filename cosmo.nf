@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
 params.help        = false 
-params.pro_file    = "hg19"
-params.rna_file    = "refGene"
+params.pro_file    = "-"
+params.rna_file    = "-"
 params.sample_file = "" // annotation data folder for annovar 
 params.method_id   = 1
 params.task_id     = "2b"
