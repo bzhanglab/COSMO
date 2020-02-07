@@ -43,8 +43,8 @@ if (params.help){
 pro_file    = file(params.pro_file)
 rna_file    = file(params.rna_file)
 sample_file = file(params.sample_file)
-method_id   = params.method
-task_id     = params.task
+method_id   = params.method_id
+task_id     = params.task_id
 out_dir     = file(params.out_dir)
 cpus        = params.cpu
 
