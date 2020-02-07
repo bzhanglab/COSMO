@@ -5,6 +5,7 @@ params.pro_file    = "-"
 params.rna_file    = "-"
 params.sample_file = ""
 params.method_id   = 1
+params.label       = "-"
 params.task_id     = "2b"
 params.cpu         = 0
 params.out_dir     = "./output"
@@ -23,6 +24,8 @@ def helpMessage() {
       --pro_file              Protein expression data at gene level.
       --rna_file              RNA expressio data at gene level.
       --sample_file           Sample annotation data.
+	  --sample_label          Sample label(s) for prediction. Multiple labels 
+	                          must be separated by ",".
       --method_id             1:SoonJye, 2:Sentieon. Default is 1.
       --task_id               The task ID, 2b or 2c, default is 2b.
       --out_dir               Output folder, default is "./output".
@@ -43,6 +46,7 @@ if (params.help){
 pro_file    = file(params.pro_file)
 rna_file    = file(params.rna_file)
 sample_file = file(params.sample_file)
+sample_label= params.sample_label
 method_id   = params.method_id
 task_id     = params.task_id
 out_dir     = file(params.out_dir)
@@ -85,24 +89,16 @@ process main_process {
         """
         Rscript ${baseDir}/bin/SoonJye_2c.R ${pro_file} ${rna_file} ${sample_file} out_dir
         """
-    } else if(method_id == 2 && task_id == "2b"){
-        println "Use method ${method_id} for task ${task_id}"
+    } else if(method_id == 2){
+        println "Use method ${method_id}"
         """
-        python ${baseDir}/bin/sentieon_2b.py \
+        python ${baseDir}/bin/sentieon.py \
             -pro ${pro_file} \
             -rna ${rna_file} \
             -s ${sample_file} \
+			-l ${sample_label}
             -o out_dir
 
-        """
-    } else if(method_id == 2 && task_id == "2c"){
-        println "Use method ${method_id} for task ${task_id}"
-        """
-        python ${baseDir}/bin/sentieon_2c.py \
-            -pro ${pro_file} \
-            -rna ${rna_file} \
-            -s ${sample_file} \
-            -o out_dir
         """
     } else {
         println "Invalid method ${method_id} or task ${task_id}"
