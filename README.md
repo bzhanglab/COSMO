@@ -37,7 +37,7 @@ nextflow run cosmo.nf
    --sample_file           Sample annotation data.
    --sample_label          Sample label(s) for prediction. Multiple labels
                            must be separated by ",".
-   --method_id             1:SoonJye, 2:Sentieon. Default is 1.
+   --method_id             1:SoonJye, 2:Sentieon, 3: 1+2. Default is 1.
    --task_id               The task ID, 2b or 2c, default is 2b.
    --out_dir               Output folder, default is "./output".
    --cpu                   The number of CPUs.
