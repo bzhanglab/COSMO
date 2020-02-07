@@ -1,4 +1,4 @@
-FROM bioconductor/release_base2:R.3.6.1_Bioc3.10
+FROM bioconductor/bioconductor_docker:RELEASE_3_10
 
 
 MAINTAINER wenbostar@gmail.com
@@ -22,13 +22,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ${PYTHON}-pip && \
     apt-get clean
 
-RUN ${PIP} --no-cache-dir install --upgrade \
-    pip \
-    setuptools
+RUN ${PIP} install --upgrade pip
+RUN ${PIP} install --upgrade setuptools
 
 RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
 
-RUN ${PIP} install numpy pandas matplotlib seaborn scikit-learn pandas_profiling argparse
+RUN ${PIP} install numpy pandas matplotlib seaborn scikit-learn
 
 RUN apt-get update && \
     apt-get upgrade -y && \
