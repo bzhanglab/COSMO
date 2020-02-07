@@ -3,7 +3,7 @@
 params.help        = false 
 params.pro_file    = "-"
 params.rna_file    = "-"
-params.sample_file = "" // annotation data folder for annovar 
+params.sample_file = ""
 params.method_id   = 1
 params.task_id     = "2b"
 params.cpu         = 0
