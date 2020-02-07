@@ -56,7 +56,7 @@ if(!out_dir.isDirectory()){
 }
 
 
-process pre_processing {
+process main_process {
     tag "test"
 
     echo true
@@ -95,7 +95,7 @@ process pre_processing {
             -o out_dir
 
         """
-    } else if(method_id == 2 && task_id == "2b"){
+    } else if(method_id == 2 && task_id == "2c"){
         println "Use method ${method_id} for task ${task_id}"
         """
         python ${baseDir}/bin/sentieon_2c.py \
