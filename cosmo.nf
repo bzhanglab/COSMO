@@ -26,7 +26,7 @@ def helpMessage() {
       --sample_file           Sample annotation data.
 	  --sample_label          Sample label(s) for prediction. Multiple labels 
 	                          must be separated by ",".
-      --method_id             1:SoonJye, 2:Sentieon. Default is 1.
+      --method_id             1:SoonJye, 2:Sentieon, 3: 1+2. Default is 1.
       --task_id               The task ID, 2b or 2c, default is 2b.
       --out_dir               Output folder, default is "./output".
       --cpu                   The number of CPUs.
@@ -48,7 +48,7 @@ rna_file    = file(params.rna_file)
 sample_file = file(params.sample_file)
 sample_label= params.sample_label
 method_id   = params.method_id
-task_id     = params.task_id
+task_id     = params.task_id // will be removed in the next version
 out_dir     = file(params.out_dir)
 cpus        = params.cpu
 
@@ -97,6 +97,21 @@ process main_process {
             -rna ${rna_file} \
             -s ${sample_file} \
 			-l ${sample_label}
+            -o out_dir
+
+        """
+    } else if(method_id == 3){
+        println "Use method ${method_id}"
+        """
+        ## TODO: combine 2b and 2c
+        
+        Rscript ${baseDir}/bin/SoonJye_2c.R ${pro_file} ${rna_file} ${sample_file} out_dir
+
+        python ${baseDir}/bin/sentieon.py \
+            -pro ${pro_file} \
+            -rna ${rna_file} \
+            -s ${sample_file} \
+            -l ${sample_label}
             -o out_dir
 
         """
