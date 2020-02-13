@@ -9,11 +9,6 @@ run_2b = function(pro_file, rna_file, sample_file, out_dir="./"){
     
     dir.create(out_dir,recursive = TRUE,showWarnings = FALSE)
     
-    ## errors variable store the frequency of different error in each dataset
-    #errors <- matrix(0, nrow=50, ncol=6)
-    #colnames(errors) <- c('dataset', 'cli_swap', 'pro_swap', 'pro_shift', 'rna_swap', 'rna_shift')
-    #errors[, 1] <- 1:50
-    
     ########### Data Retrieval
     cat('Correcting dataset:', pro_file, " and ", rna_file , '... \n')
     out_pro_files <- missing_value_impute(pro_file,rna_file,out_dir=out_dir)
