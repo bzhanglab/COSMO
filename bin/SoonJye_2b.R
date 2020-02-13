@@ -565,7 +565,6 @@ getClassWeight <- function(labels){
 }
 
 
-
 computeRankdist <- function(corsample){
     rnadistpro <- corsample
     prodistrna <- corsample
