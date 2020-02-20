@@ -34,8 +34,8 @@ nextflow run cosmo.nf
  Arguments:
    --pro_file              Protein expression data at gene level.
    --rna_file              RNA expressio data at gene level.
-   --sample_file           Sample annotation data.
-   --sample_label          Sample label(s) for prediction. Multiple labels
+   --annotation_file       Sample annotation data.
+   --annotation_attribute  Sample label(s) for prediction. Multiple labels
                            must be separated by ",".
    --method_id             1:SoonJye, 2:Sentieon, 3: 1+2. Default is 1.
    --task_id               The task ID, 2b or 2c, default is 2b.
