@@ -80,7 +80,7 @@ process run_method_1 {
     rna_file <- "${rna_file}"
     sample_file <- "${sample_file}"
     out_dir <- "method1_folder"
-    run_2b(pro_file, rna_file, anno_file, out_dir=out_dir)
+    run_2b(pro_file, rna_file, sample_file, out_dir=out_dir)
 
     """
 }
