@@ -46,7 +46,7 @@ sample_label= params.cli_attribute
 out_dir     = file(params.out_dir)
 cpus        = params.cpu
 
-
+println "sample attribute will be used: $sample_label \n"
 
 if(!out_dir.isDirectory()){
     out_dir_result = out_dir.mkdirs()
