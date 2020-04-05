@@ -140,8 +140,8 @@ process combine_methods {
     #!/usr/bin/env /usr/local/bin/Rscript
     source("${baseDir}/bin/SoonJye_function.R")
     source("${baseDir}/bin/combine_methods.R")
-    method1_folder <- "${method1_folder}"
-    method2_folder <- "${method2_folder}"
+    method1_folder <- "${method1_out_folder}"
+    method2_folder <- "${method2_out_folder}"
     sample_annotation_file <- "${sample_file}"
     clinical_attributes <- "${sample_label}"
     combine_methods(method1_folder, method2_folder, 
