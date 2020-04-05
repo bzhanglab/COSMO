@@ -62,7 +62,7 @@ process run_method_1 {
 
     container "cosmo:latest"
 
-    publishDir "${method1_folder}/", mode: "copy", overwrite: true
+    publishDir "${out_dir}/${method1_folder}", mode: "copy", overwrite: true
 
     input:
     file pro_file
@@ -94,7 +94,7 @@ process run_method_2 {
 
     container "cosmo:latest"
 
-    publishDir "${method2_folder}/", mode: "copy", overwrite: true
+    publishDir "${out_dir}/${method2_folder}/", mode: "copy", overwrite: true
 
     input:
     file pro_file
@@ -125,7 +125,7 @@ process combine_methods {
 
     container "cosmo:latest"
 
-    publishDir "${final_res_folder}/", mode: "copy", overwrite: true
+    publishDir "${out_dir}/${final_res_folder}/", mode: "copy", overwrite: true
 
     input:
     file method1_out_folder
