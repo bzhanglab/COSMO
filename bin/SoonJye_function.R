@@ -97,8 +97,8 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./"){
   
   ## output intermediate prediction file
   tobewritten <- traincli[, c(1, 2, 4, 7, 11, 3, 5, 9, 13)]
-  colnames(tobewritten)[3:5] <- c('GenderProvided', 'GenderByRNA', 'GenderByPRO')
-  colnames(tobewritten)[7:9] <- c('MsiProvided', 'MsiByRNA', 'MsiByPRO')
+  colnames(tobewritten)[3:5] <- c('genderProvided', 'genderByRNA', 'genderByPRO')
+  colnames(tobewritten)[7:9] <- c('msiProvided', 'msiByRNA', 'msiByPRO')
   intermediate_file <- paste(out_dir,"/intermediate.csv",sep = "")
   write.table(tobewritten, intermediate_file, col.names=TRUE, row.names=FALSE, sep=',')
   
