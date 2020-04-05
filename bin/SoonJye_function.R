@@ -831,16 +831,3 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, rankdist, rnama
 }
 
 
-
-
-cmdargs <- commandArgs(TRUE)
-pro_file <- cmdargs[1]
-rna_file <- cmdargs[2]
-anno_file <- cmdargs[3]
-out_dir <- cmdargs[4]
-#prefix <- cmdargs[5]
-
-
-run_2b(pro_file, rna_file, anno_file, out_dir=out_dir)
-
-
