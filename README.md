@@ -88,7 +88,8 @@ Below is an example run COSMO:
 ```sh
 nextflow run cosmo.nf --pro_file example_data/for_2b/Testing_1/test_pro.tsv \
     --rna_file example_data/for_2b/Testing_1/test_rna.tsv \
-    --sample_file example_data/for_2b/Testing_1/test_cli.tsv \
+    --cli_file example_data/for_2b/Testing_1/test_cli.tsv \
+	--cli_attribute "gender,msi" \
     --out_dir output
 ```
 The data to run the above example can be found in this folder: "``example_data``".
