@@ -3,10 +3,8 @@
 params.help        = false 
 params.pro_file    = "-"
 params.rna_file    = "-"
-params.sample_file = ""
-params.method_id   = 1
-params.label       = "-"
-params.task_id     = "2b"
+params.cli_file    = ""
+params.cli_attribute = "-"
 params.cpu         = 0
 params.out_dir     = "./output"
 
@@ -23,11 +21,9 @@ def helpMessage() {
     Arguments:
       --pro_file              Protein expression data at gene level.
       --rna_file              RNA expressio data at gene level.
-      --sample_file           Sample annotation data.
-	  --sample_label          Sample label(s) for prediction. Multiple labels 
+      --cli_file              Sample annotation data.
+	  --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
 	                          must be separated by ",".
-      --method_id             1:SoonJye, 2:Sentieon, 3: 1+2. Default is 1.
-      --task_id               The task ID, 2b or 2c, default is 2b.
       --out_dir               Output folder, default is "./output".
       --cpu                   The number of CPUs.
       --help                  Print help message.
@@ -45,10 +41,8 @@ if (params.help){
 
 pro_file    = file(params.pro_file)
 rna_file    = file(params.rna_file)
-sample_file = file(params.sample_file)
-sample_label= params.sample_label
-method_id   = params.method_id
-task_id     = params.task_id // will be removed in the next version
+sample_file = file(params.cli_file)
+sample_label= params.cli_attribute
 out_dir     = file(params.out_dir)
 cpus        = params.cpu
 
@@ -60,14 +54,15 @@ if(!out_dir.isDirectory()){
 }
 
 
-process main_process {
-    tag "test"
+process run_method_1 {
+
+    tag "run_method_1"
 
     echo true
 
     container "cosmo:latest"
 
-    publishDir "${out_dir}/", mode: "copy", overwrite: true
+    publishDir "${method1_folder}/", mode: "copy", overwrite: true
 
     input:
     file pro_file
@@ -75,49 +70,87 @@ process main_process {
     file sample_file
 
     output:
-    file "out_dir" into final_res_folder
+    file "method1_folder" into method1_out_folder
 
     script:
-    if (method_id == 1 && task_id == "2b"){
-        println "Use method ${method_id} for task ${task_id}"
-        """
-        Rscript ${baseDir}/bin/SoonJye_2b.R ${pro_file} ${rna_file} ${sample_file} out_dir
-        """
-    
-    }else if(method_id == 1 && task_id == "2c") {
-        println "Use method ${method_id} for task ${task_id}"
-        """
-        Rscript ${baseDir}/bin/SoonJye_2c.R ${pro_file} ${rna_file} ${sample_file} out_dir
-        """
-    } else if(method_id == 2){
-        println "Use method ${method_id}"
-        """
-        python ${baseDir}/bin/sentieon.py \
-            -pro ${pro_file} \
-            -rna ${rna_file} \
-            -s ${sample_file} \
-			-l ${sample_label}
-            -o out_dir
+    """
+    #!/usr/bin/env /usr/local/bin/Rscript
+    source("${baseDir}/bin/SoonJye_function.R")
+    pro_file <- "${pro_file}"
+    rna_file <- "${rna_file}"
+    sample_file <- "${sample_file}"
+    out_dir <- "method1_folder"
+    run_2b(pro_file, rna_file, anno_file, out_dir=out_dir)
 
-        """
-    } else if(method_id == 3){
-        println "Use method ${method_id}"
-        """
-        ## TODO: combine 2b and 2c
-        
-        Rscript ${baseDir}/bin/SoonJye_2c.R ${pro_file} ${rna_file} ${sample_file} out_dir
-
-        python ${baseDir}/bin/sentieon.py \
-            -pro ${pro_file} \
-            -rna ${rna_file} \
-            -s ${sample_file} \
-            -l ${sample_label}
-            -o out_dir
-
-        """
-    } else {
-        println "Invalid method ${method_id} or task ${task_id}"
-    }
+    """
 }
+
+
+process run_method_2 {
+
+    tag "run_method_2"
+
+    echo true
+
+    container "cosmo:latest"
+
+    publishDir "${method2_folder}/", mode: "copy", overwrite: true
+
+    input:
+    file pro_file
+    file rna_file
+    file sample_file
+
+    output:
+    file "method2_folder" into method2_out_folder
+
+    script:
+    """
+    python ${baseDir}/bin/sentieon.py \
+        -pro ${pro_file} \
+        -rna ${rna_file} \
+        -s ${sample_file} \
+        -l ${sample_label} \
+        -o method2_folder
+
+    """
+    
+}
+
+process combine_methods {
+
+    tag "combine_methods"
+
+    echo true
+
+    container "cosmo:latest"
+
+    publishDir "${final_res_folder}/", mode: "copy", overwrite: true
+
+    input:
+    file method1_out_folder
+    file method2_out_folder
+    file sample_file
+
+    output:
+    file "*cosmo*" into final_res_folder
+
+    script:
+    """
+    #!/usr/bin/env /usr/local/bin/Rscript
+    source("${baseDir}/bin/SoonJye_function.R")
+    source("${baseDir}/bin/combine_methods.R")
+    method1_folder <- "${method1_folder}"
+    method2_folder <- "${method2_folder}"
+    sample_annotation_file <- "${sample_file}"
+    clinical_attributes <- "${sample_label}"
+    combine_methods(method1_folder, method2_folder, 
+                    sample_annotation_file,
+                    clinical_attributes = clinical_attributes, 
+                    out_dir = "./", prefix = "cosmo")
+    """
+    
+}
+
 
 

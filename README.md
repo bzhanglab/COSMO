@@ -34,11 +34,9 @@ nextflow run cosmo.nf
  Arguments:
    --pro_file              Protein expression data at gene level.
    --rna_file              RNA expressio data at gene level.
-   --annotation_file       Sample annotation data.
-   --annotation_attribute  Sample label(s) for prediction. Multiple labels
+   --cli_file              Sample annotation data.
+   --cli_attribute         Sample attribute(s) for prediction. Multiple attributes
                            must be separated by ",".
-   --method_id             1:SoonJye, 2:Sentieon, 3: 1+2. Default is 1.
-   --task_id               The task ID, 2b or 2c, default is 2b.
    --out_dir               Output folder, default is "./output".
    --cpu                   The number of CPUs.
    --help                  Print help message.
@@ -91,8 +89,6 @@ Below is an example run COSMO:
 nextflow run cosmo.nf --pro_file example_data/for_2b/Testing_1/test_pro.tsv \
     --rna_file example_data/for_2b/Testing_1/test_rna.tsv \
     --sample_file example_data/for_2b/Testing_1/test_cli.tsv \
-    --method_id 1 \
-    --task_id 2b \
     --out_dir output
 ```
 The data to run the above example can be found in this folder: "``example_data``".
