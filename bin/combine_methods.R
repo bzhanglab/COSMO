@@ -28,8 +28,18 @@ combine_methods=function(method1_folder, method2_folder,
   fmlerank <- rankbyCol(rankdist)
   
   matcher <- stableMarriage(malerank, fmlerank)
-  rnamatch <- as.numeric(sub('PRO_', '', matcher$malematch))
-  promatch <- as.numeric(sub('RNA_', '', matcher$fmlematch))
+  #rnamatch <- as.numeric(sub('PRO_', '', matcher$malematch))
+  #promatch <- as.numeric(sub('RNA_', '', matcher$fmlematch))
+  rnamatch <- c()
+  promatch <- c()
+  for(i in 1:length(matcher$malematch)){
+    rnamatch[i] <- which(rownames(corsample) == matcher$malematch[i])
+  }
+  
+  for(i in 1:length(matcher$fmlematch)){
+    promatch[i] <- which(rownames(corsample) == matcher$fmlematch[i])
+  }
+  
   total_samples <- nrow(sjcli)
   #nonmatch <- which(1:100 != rnamatch)
   nonmatch <- which(1:total_samples != rnamatch)
