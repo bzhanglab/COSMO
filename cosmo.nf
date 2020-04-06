@@ -143,7 +143,7 @@ process combine_methods {
     method1_folder <- "${method1_out_folder}"
     method2_folder <- "${method2_out_folder}"
     sample_annotation_file <- "${sample_file}"
-    clinical_attributes <- "${sample_label}"
+    clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
     combine_methods(method1_folder, method2_folder, 
                     sample_annotation_file,
                     clinical_attributes = clinical_attributes, 
