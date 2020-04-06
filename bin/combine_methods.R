@@ -1,3 +1,4 @@
+library(dplyr)
 
 combine_methods=function(method1_folder, method2_folder, 
                          sample_annotation_file,
