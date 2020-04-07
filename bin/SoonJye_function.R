@@ -5,7 +5,8 @@ library(caret)
 library(parallel)
 library(doParallel)
 
-run_2b <- function(pro_file, rna_file, anno_file, out_dir="./"){
+run_2b <- function(pro_file, rna_file, anno_file, out_dir="./",
+                   clinical_attributes=NA){
   
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   
@@ -76,49 +77,73 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./"){
   
   
   ########### Attribute prediction and clinical samples swapping detection
-  traincli <- clinic[, c('sample', 'gender', 'msi')]
-  traincli$gender_prob <- apply(traincli, 1, function(x) if (x['gender'] == 'Female') 0 else 1)
-  traincli$msi_prob <- apply(traincli, 1, function(x) if (x['msi'] == 'MSI-High') 0 else 1)
+  #traincli <- clinic[, c('sample', 'gender', 'msi')]
+  #traincli$gender_prob <- apply(traincli, 1, function(x) if (x['gender'] == 'Female') 0 else 1)
+  #traincli$msi_prob <- apply(traincli, 1, function(x) if (x['msi'] == 'MSI-High') 0 else 1)
+  
+  traincli <- sjcli[, c('sample', clinical_attributes)]
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
+  for(i in 1:length(clinical_attributes)){
+    #cli_attr <- clinical_attributes[i]
+    cat("clinical attributes: ",clinical_attributes[i],"\n")
+    traincli[,cli_attr_prob_names_true[i]] <- apply(traincli, 1, function(x) if (x[clinical_attributes[i]] == levels(traincli[,clinical_attributes[i]])[1]) 0 else 1)
+  }
   
   #### First round of prediction using cross validation (after removing RNA/PRO mismatch samples)
-  traincli <- predictCV(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm)
+  traincli <- predictCV(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm, clinical_attributes)
 
   cat('\n')
   #### First round flagging potential Clinical Swapping
-  traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob) / 2
-  traincli$pred_msi    <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
+  #traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob) / 2
+  #traincli$pred_msi    <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
   
-  clinic_swap <- flagClinicalSwap(traincli, nonmatch)
+  # prediction probability
+  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  
+  cli_attr_prob_names_pred_combine <- paste("pred_",clinical_attributes,sep = "")
+  for(i in 1:length(clinical_attributes)){
+    cat("clinical attributes: ",clinical_attributes[i],"\n")
+    traincli[,cli_attr_prob_names_pred_combine[i]] <- (traincli[,cli_attr_prob_names_pred_rna[i]] + traincli[,cli_attr_prob_names_pred_pro[i]]) / 2.0
+  }
+  
+  
+  
+  clinic_swap <- flagClinicalSwap(traincli, nonmatch, clinical_attributes)
   cat('Clinical Label potential swapping:', paste0(clinic_swap), '\n\n')
   
   #### Second round of prediction (after removing RNA/PRO mismatched samples & clinical swapping cases)
-  traincli <- predictLR(traincli, c(nonmatch, clinic_swap), rna_sex, rna_atsm, pro_sex, pro_atsm)
-
+  traincli <- predictLR(traincli, c(nonmatch, clinic_swap), rna_sex, rna_atsm, pro_sex, pro_atsm, clinical_attributes)
+  
+  write.table(traincli,file = paste(out_dir,"/clinical_attributes_pred.tsv",sep = ""),col.names = TRUE,row.names = FALSE,quote = FALSE,sep = "\n")
   
   ## output intermediate prediction file
-  tobewritten <- traincli[, c(1, 2, 4, 7, 11, 3, 5, 9, 13)]
-  colnames(tobewritten)[3:5] <- c('genderProvided', 'genderByRNA', 'genderByPRO')
-  colnames(tobewritten)[7:9] <- c('msiProvided', 'msiByRNA', 'msiByPRO')
-  intermediate_file <- paste(out_dir,"/intermediate.csv",sep = "")
-  write.table(tobewritten, intermediate_file, col.names=TRUE, row.names=FALSE, sep=',')
+  # for example: "sample","gender","GenderProvided","genderByRNA","genderByPRO","msi","MsiProvided","msiByRNA","msiByPRO"
+  #tobewritten <- traincli[, c(1, 2, 4, 7, 11, 3, 5, 9, 13)]
+  #colnames(tobewritten)[3:5] <- c('genderProvided', 'genderByRNA', 'genderByPRO')
+  #colnames(tobewritten)[7:9] <- c('msiProvided', 'msiByRNA', 'msiByPRO')
+  #intermediate_file <- paste(out_dir,"/intermediate.csv",sep = "")
+  #write.table(tobewritten, intermediate_file, col.names=TRUE, row.names=FALSE, sep=',')
   
-  
-
 
   final_tab <- data.frame(sample=sample_labels, Clinical=1:sample_n, RNAseq=1:sample_n, Proteomics=1:sample_n)
   
   cat('\n')
   ########### Determine Clinical Swapping (Second round to detect and correct the labels)
-  traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob)/2
-  traincli$pred_msi    <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
+  #traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob)/2
+  #traincli$pred_msi    <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
+  for(i in 1:length(clinical_attributes)){
+    cat("clinical attributes: ",clinical_attributes[i],"\n")
+    traincli[,cli_attr_prob_names_pred_combine[i]] <- (traincli[,cli_attr_prob_names_pred_rna[i]] + traincli[,cli_attr_prob_names_pred_pro[i]]) / 2.0
+  }
   
-  final_tab   <- correctClinicalSwapping(traincli, final_tab, nonmatch)
+  final_tab   <- correctClinicalSwapping(traincli, final_tab, nonmatch, clinical_attributes)
   clinic_swap <- which(final_tab$Clinical != 1:sample_n)
-  
   
   cat('\n')
   ########## Determine omics swapping
-  final_tab <- correctOmicsSwapping(traincli, final_tab, nonmatch, rnamatch, pairdist)
+  final_tab <- correctOmicsSwapping(traincli, final_tab, nonmatch, rnamatch, pairdist, clinical_attributes)
   rnaswap <- which(final_tab$RNAseq != 1:sample_n)
   proswap <- which(final_tab$Proteomics != 1:sample_n)
   swapped <- c(rnaswap, proswap)
@@ -127,7 +152,7 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./"){
   cat('\n')
   ########## Determine omics duplication and shifting
   dup_shift <- setdiff(nonmatch, swapped)
-  final_tab <- correctOmicsShifting(traincli, final_tab, dup_shift, rankdist, rnamatch, promatch, swapped, pairdist)
+  final_tab <- correctOmicsShifting(traincli, final_tab, dup_shift, rankdist, rnamatch, promatch, swapped, pairdist, clinical_attributes)
   rnashift  <- which(final_tab$RNAseq != 1:sample_n)
   rnashift  <- setdiff(rnashift, rnaswap)
   proshift  <- which(final_tab$Proteomics != 1:sample_n)
@@ -499,60 +524,112 @@ trainGLMcv <- function(msiLabel, inputmtx, alpha, k = 5){
   return(predoutput)
 }
 
+is_gender = function(x){
+  gd <- grepl(pattern = "gender",x = x, ignore.case = TRUE)
+  return(gd)
+}
+
 
 ## Train: use trainGLMcv fn for each clinical attribute
-predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm){
-  cat('Predicting gender from RNA... \n')
-  predoutput <- trainGLMcv(traincli$gender[-nonmatch], rna_sex[-nonmatch, ], 0.3)
-  traincli$rgender <- traincli$gender
-  traincli$rgender_prob <- traincli$gender_prob
-  traincli$rgender[-nonmatch] <- predoutput$att
-  traincli$rgender_prob[-nonmatch] <- predoutput$att_prob
+# clinical_attributes = c("gender")
+predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm, 
+                      clinical_attributes){
   
-  cat('Predicting MSI from RNA... \n')
-  predoutput <- trainGLMcv(traincli$msi[-nonmatch], rna_atsm[-nonmatch, ], 0.3)
-  traincli$rmsi <- traincli$msi
-  traincli$rmsi_prob <- traincli$msi_prob
-  traincli$rmsi[-nonmatch] <- predoutput$att
-  traincli$rmsi_prob[-nonmatch] <- predoutput$att_prob
   
-  cat('Predicting gender from PRO... \n')
-  predoutput <- trainGLMcv(traincli$gender[-nonmatch], pro_sex[-nonmatch, ], 0.3)
-  traincli$pgender <- traincli$gender
-  traincli$pgender_prob <- traincli$gender_prob
-  traincli$pgender[-nonmatch] <- predoutput$att
-  traincli$pgender_prob[-nonmatch] <- predoutput$att_prob
+  # prediction probability
+  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_rna <- paste("r",clinical_attributes,sep = "")
+  cli_attr_prob_names_pro <- paste("p",clinical_attributes,sep = "")
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
   
-  cat('Predicting MSI from PRO... \n')
-  predoutput <- trainGLMcv(traincli$msi[-nonmatch], pro_atsm[-nonmatch, ], 0.3)
-  traincli$pmsi <- traincli$msi
-  traincli$pmsi_prob <- traincli$msi_prob
-  traincli$pmsi[-nonmatch] <- predoutput$att
-  traincli$pmsi_prob[-nonmatch] <- predoutput$att_prob
+  for(i in 1:length(clinical_attributes)){
+    if(is_gender(clinical_attributes[i])){
+      ## gender prediction
+      cat("Predicting ", clinical_attributes[i] ," from RNA... \n")
+      predoutput_rna <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], rna_sex[-nonmatch, ], 0.3)
+      cat("Predicting ", clinical_attributes[i] ," from Protein... \n")
+      predoutput_pro <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], pro_sex[-nonmatch, ], 0.3)
+      
+    }else{
+      ## non-gender attribute prediction
+      cat("Predicting ", clinical_attributes[i] ," from RNA... \n")
+      predoutput_rna <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], rna_atsm[-nonmatch, ], 0.3)
+      cat("Predicting ", clinical_attributes[i] ," from Protein... \n")
+      predoutput_pro <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], pro_atsm[-nonmatch, ], 0.3)
+    }
+    
+    ## RNA
+    traincli[,cli_attr_prob_names_rna[i]] <- traincli[,clinical_attributes[i]]
+    traincli[,cli_attr_prob_names_pred_rna[i]] <- traincli[,cli_attr_prob_names_true[i]]
+    traincli[,cli_attr_prob_names_rna[i]][-nonmatch] <- predoutput_rna$att
+    traincli[,cli_attr_prob_names_pred_rna[i]][-nonmatch] <- predoutput_rna$att_prob
+    
+    ## Protein
+    traincli[,cli_attr_prob_names_pro[i]] <- traincli[,clinical_attributes[i]]
+    traincli[,cli_attr_prob_names_pred_pro[i]] <- traincli[,cli_attr_prob_names_true[i]]
+    traincli[,cli_attr_prob_names_pro[i]][-nonmatch] <- predoutput_pro$att
+    traincli[,cli_attr_prob_names_pred_pro[i]][-nonmatch] <- predoutput_pro$att_prob
+    
+  }
   
   return(traincli)
 }
 
 
+find_gender_label = function(clinical_attributes = c("gender")){
+  
+  gender_label <- NA
+  for(i in clinical_attributes){
+    if(is_gender(i)){
+      gender_label <- i
+    }
+  }
+  return(gender_label)
+}
+
+
 ## Correction: Detect potential clinical swapping
-flagClinicalSwap <- function(traincli, nonmatch) {
-  high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
-  (high_suspect <- setdiff(high_suspect, nonmatch))
-  cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
-  (cli_suspect <- setdiff(cli_suspect, nonmatch))
+flagClinicalSwap <- function(traincli, nonmatch, clinical_attributes) {
+  
+  gender_label <- find_gender_label(clinical_attributes)
+  if(!is.na(gender_label)){
+    gender_prob <- paste(gender_label,"_prob",sep = "")
+    pred_gender <- paste("pred_",gender_label,sep = "")
+    #high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
+    high_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.7)
+    (high_suspect <- setdiff(high_suspect, nonmatch))
+    #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
+    (cli_suspect <- setdiff(cli_suspect, nonmatch))
+  }else{
+    cli_suspect <- c()
+  }
+  
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_combine <- paste("pred_",clinical_attributes,sep = "")
+  
   
   clinic_swap <- c()
   if (length(cli_suspect) <= 1){
     cat('No Clinical Swapping Cases Found! \n')
   } else  {
-    subset <- traincli[cli_suspect, c('gender_prob', 'msi_prob', 'pred_gender', 'pred_msi')]
+    #subset <- traincli[cli_suspect, c('gender_prob', 'msi_prob', 'pred_gender', 'pred_msi')]
+    subset <- traincli[cli_suspect, c(cli_attr_prob_names_true,cli_attr_prob_names_pred_combine)]
+    
     
     clidist <- matrix(nrow=length(cli_suspect), ncol=length(cli_suspect))
     rownames(clidist) <- cli_suspect
     colnames(clidist) <- cli_suspect
     for (male in as.character(cli_suspect)) {
       for (fmle in as.character(cli_suspect)) {
-        clidist[male, fmle] <- (1 - abs(subset[male, 'gender_prob'] - subset[fmle, 'pred_gender'])) + (1 - abs(subset[male, 'msi_prob'] - subset[fmle, 'pred_msi']))
+        #clidist[male, fmle] <- (1 - abs(subset[male, 'gender_prob'] - subset[fmle, 'pred_gender'])) + (1 - abs(subset[male, 'msi_prob'] - subset[fmle, 'pred_msi']))
+        clidist[male, fmle] <- 0
+        for(i in 1:length(clinical_attributes)){
+          clidist[male, fmle] <- clidist[male, fmle] + (1 - abs(subset[male, cli_attr_prob_names_true[i]] - subset[fmle, cli_attr_prob_names_pred_combine[i]]))
+        }
       }
     }
     
@@ -575,96 +652,133 @@ flagClinicalSwap <- function(traincli, nonmatch) {
 
 
 ## Train: use trainGLM fn for each clinical attribute
-predictLR <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm) {
-  numvar <- 0
-  iter <- 0
-  cat('Training RNA_gender model... ')
-  while (numvar < 4){
-    fit <- trainGLM(traincli$gender[-nonmatch], rna_sex[-nonmatch, ], 0.3)
-    numvar <- sum(coef(fit) > 0)
-    iter <- iter + 1
-  }
-  cat('Done - Regularized model with', numvar, 'variables. \n')
-  traincli$rgender <- predict(fit, rna_sex, type='class')[, 1]
-  traincli$rgender_prob <- predict(fit, rna_sex, type='response')[, 1]
+# clinical_attributes = c("gender")
+predictLR <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
+                      clinical_attributes) {
+  
+  # prediction probability
+  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_rna <- paste("r",clinical_attributes,sep = "")
+  cli_attr_prob_names_pro <- paste("p",clinical_attributes,sep = "")
   
   
-  numvar <- 0
-  iter <- 0
-  cat('Training RNA_MSI model... ')
-  while (numvar < 4){
-    fit <- trainGLM(traincli$msi[-nonmatch], rna_atsm[-nonmatch, ], 0.3)
-    numvar <- sum(coef(fit) > 0)
-    iter <- iter + 1
-  }
-  cat('Done - Regularized model with', numvar, 'variables. \n')
-  traincli$rmsi <- predict(fit, rna_atsm, type='class')[, 1]
-  traincli$rmsi_prob <- predict(fit, rna_atsm, type='response')[, 1]
-  
-  
-  numvar <- 0
-  iter   <- 0
-  cat('Training PRO_gender model... ')
-  while (numvar < 4 && iter < 50){
-    fit1 <- trainGLM(traincli$gender[-nonmatch], pro_sex[-nonmatch, ], 0.3)
-    numvar1 <- sum(coef(fit1) > 0)
-    if (numvar1 > numvar) {
-      fit <- fit1
-      numvar <- numvar1
+  for(i in 1:length(clinical_attributes)){
+    if(is_gender(clinical_attributes[i])){
+      numvar <- 0
+      iter <- 0
+      cat('Training RNA model for ',clinical_attributes[i],"\n",sep = "")
+      while (numvar < 4){
+        fit <- trainGLM(traincli[,clinical_attributes[i]][-nonmatch], rna_sex[-nonmatch, ], 0.3)
+        numvar <- sum(coef(fit) > 0)
+        iter <- iter + 1
+      }
+      cat('Done - Regularized model with', numvar, 'variables. \n')
+      #traincli$rgender <- predict(fit, rna_sex, type='class')[, 1]
+      traincli[,cli_attr_prob_names_rna[i]] <- predict(fit, rna_sex, type='class')[, 1]
+      #traincli$rgender_prob <- predict(fit, rna_sex, type='response')[, 1]
+      traincli[,cli_attr_prob_names_pred_rna[i]] <- predict(fit, rna_sex, type='response')[, 1]
+      
+      numvar <- 0
+      iter   <- 0
+      cat('Training Protein model for ',clinical_attributes[i],"\n",sep = "")
+      while (numvar < 4 && iter < 50){
+        fit1 <- trainGLM(traincli[,clinical_attributes[i]][-nonmatch], pro_sex[-nonmatch, ], 0.3)
+        numvar1 <- sum(coef(fit1) > 0)
+        if (numvar1 > numvar) {
+          fit <- fit1
+          numvar <- numvar1
+        }
+        iter <- iter + 1
+      }
+      cat('Done - Regularized model with', numvar, 'variables. \n')
+      #traincli$pgender <- predict(fit, pro_sex, type='class')[, 1]
+      traincli[,cli_attr_prob_names_pro[i]] <- predict(fit, pro_sex, type='class')[, 1]
+      #traincli$pgender_prob <- predict(fit, pro_sex, type='response')[, 1]
+      traincli[,cli_attr_prob_names_pred_pro[i]] <- predict(fit, pro_sex, type='response')[, 1]
+      
+      
+    }else{
+      ## non-gender attribute prediction
+      numvar <- 0
+      iter <- 0
+      cat('Training RNA model for ',clinical_attributes[i],"\n",sep = "")
+      while (numvar < 4){
+        fit <- trainGLM(traincli[,clinical_attributes[i]][-nonmatch], rna_atsm[-nonmatch, ], 0.3)
+        numvar <- sum(coef(fit) > 0)
+        iter <- iter + 1
+      }
+      cat('Done - Regularized model with', numvar, 'variables. \n')
+      traincli[,cli_attr_prob_names_rna[i]] <- predict(fit, rna_atsm, type='class')[, 1]
+      traincli[,cli_attr_prob_names_pred_rna[i]] <- predict(fit, rna_atsm, type='response')[, 1]
+      
+      numvar <- 0
+      iter   <- 0
+      cat('Training Protein model for ',clinical_attributes[i],"\n",sep = "")
+      while (numvar < 4 && iter < 50){
+        fit1 <- trainGLM(traincli[,clinical_attributes[i]][-nonmatch], pro_atsm[-nonmatch, ], 0.3)
+        numvar1 <- sum(coef(fit1) > 0)
+        if (numvar1 > numvar) {
+          fit <- fit1
+          numvar <- numvar1
+        }
+        iter <- iter + 1
+      }
+      cat('Done - Regularized model with', numvar, 'variables. \n')
+      traincli[,cli_attr_prob_names_pro[i]] <- predict(fit, pro_atsm, type='class')[, 1]
+      traincli[,cli_attr_prob_names_pred_pro[i]] <- predict(fit, pro_atsm, type='response')[, 1]
+      
     }
-    iter <- iter + 1
+    
   }
-  cat('Done - Regularized model with', numvar, 'variables. \n')
-  traincli$pgender <- predict(fit, pro_sex, type='class')[, 1]
-  traincli$pgender_prob <- predict(fit, pro_sex, type='response')[, 1]
-  
-  
-  numvar <- 0
-  iter   <- 0
-  cat('Training PRO_MSI model... ')
-  while (numvar < 4 && iter < 50){
-    fit1 <- trainGLM(traincli$msi[-nonmatch], pro_atsm[-nonmatch, ], 0.3)
-    numvar1 <- sum(coef(fit1) > 0)
-    if (numvar1 > numvar) {
-      fit <- fit1
-      numvar <- numvar1
-    }
-    iter <- iter + 1
-  }
-  cat('Done - Regularized model with', numvar, 'variables. \n')
-  traincli$pmsi <- predict(fit, pro_atsm, type='class')[, 1]
-  traincli$pmsi_prob <- predict(fit, pro_atsm, type='response')[, 1]
   
   return(traincli)
 }
 
 
-
-
 ## Correction: Detect clinical swapping and correct label
-correctClinicalSwapping <- function(traincli, final_tab, nonmatch) {
-  high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
-  (high_suspect <- setdiff(high_suspect, nonmatch))
-  if (length(high_suspect) > 0) {
-    cat('Highly suspected Clinical swap case:', paste(high_suspect), '\n')
-    final_tab$Clinical[high_suspect] <- -1
+correctClinicalSwapping <- function(traincli, final_tab, nonmatch, clinical_attributes) {
+
+  gender_label <- find_gender_label(clinical_attributes)
+  if(!is.na(gender_label)){
+    gender_prob <- paste(gender_label,"_prob",sep = "")
+    pred_gender <- paste("pred_",gender_label,sep = "")
+    #high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
+    high_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.7)
+    (high_suspect <- setdiff(high_suspect, nonmatch))
+    if (length(high_suspect) > 0) {
+      cat('Highly suspected Clinical swap case:', paste(high_suspect), '\n')
+      final_tab$Clinical[high_suspect] <- -1
+    }
+    #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.35)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.35)
+    cli_suspect <- setdiff(cli_suspect, nonmatch)
+  }else{
+    cli_suspect <- c()
   }
-  cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.35)
-  cli_suspect <- setdiff(cli_suspect, nonmatch)
   
+  
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_combine <- paste("pred_",clinical_attributes,sep = "")
   
   clinic_swap <- c()
   if (length(cli_suspect) <= 1){
     cat('No Clinical Swapping Cases Found! \n')
   } else  {
-    subset <- traincli[cli_suspect, c('gender_prob', 'msi_prob', 'pred_gender', 'pred_msi')]
+    #subset <- traincli[cli_suspect, c('gender_prob', 'msi_prob', 'pred_gender', 'pred_msi')]
+    subset <- traincli[cli_suspect, c(cli_attr_prob_names_true,cli_attr_prob_names_pred_combine)]
     
     clidist <- matrix(nrow=length(cli_suspect), ncol=length(cli_suspect))
     rownames(clidist) <- cli_suspect
     colnames(clidist) <- cli_suspect
     for (male in as.character(cli_suspect)) {
       for (fmle in as.character(cli_suspect)) {
-        clidist[male, fmle] <- (1 - abs(subset[male, 'gender_prob'] - subset[fmle, 'pred_gender'])) + (1 - abs(subset[male, 'msi_prob'] - subset[fmle, 'pred_msi']))
+        #clidist[male, fmle] <- (1 - abs(subset[male, 'gender_prob'] - subset[fmle, 'pred_gender'])) + (1 - abs(subset[male, 'msi_prob'] - subset[fmle, 'pred_msi']))
+        clidist[male, fmle] <- 0
+        for(i in 1:length(clinical_attributes)){
+          clidist[male, fmle] <- clidist[male, fmle] + (1 - abs(subset[male, cli_attr_prob_names_true[i]] - subset[fmle, cli_attr_prob_names_pred_combine[i]]))
+        }
       }
     }
     
@@ -691,7 +805,14 @@ correctClinicalSwapping <- function(traincli, final_tab, nonmatch) {
 
 
 ## Correct: Detect omics swapping and correct label
-correctOmicsSwapping <- function(traincli, final_tab, nonmatch, rnamatch, pairdist) {
+correctOmicsSwapping <- function(traincli, final_tab, nonmatch, rnamatch, pairdist,
+                                 clinical_attributes) {
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
+  # prediction probability
+  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  
   swapped <- c()
   for (r in nonmatch){
     if (r %in% swapped)    next
@@ -703,11 +824,20 @@ correctOmicsSwapping <- function(traincli, final_tab, nonmatch, rnamatch, pairdi
       }
       
       swapped <- c(swapped, r, p)
-      subset <- traincli[c(r,p), c('gender_prob', 'rgender_prob', 'pgender_prob', 'msi_prob', 'rmsi_prob', 'pmsi_prob')]
-      pro_swap <- abs(subset[1,1]-subset[1,2]) + abs(subset[1,1]-subset[2,3]) + abs(subset[2,1]-subset[2,2]) + abs(subset[2,1]-subset[1,3])
-      pro_swap <- pro_swap + abs(subset[1,4]-subset[1,5]) + abs(subset[1,4]-subset[2,6]) + abs(subset[2,4]-subset[2,5]) + abs(subset[2,4]-subset[1,6])
-      rna_swap <- abs(subset[1,1]-subset[2,2]) + abs(subset[1,1]-subset[1,3]) + abs(subset[2,1]-subset[1,2]) + abs(subset[2,1]-subset[2,3])
-      rna_swap <- rna_swap + abs(subset[1,4]-subset[2,5]) + abs(subset[1,4]-subset[1,6]) + abs(subset[2,4]-subset[1,5]) + abs(subset[2,4]-subset[2,6])
+      #subset <- traincli[c(r,p), c('gender_prob', 'rgender_prob', 'pgender_prob', 'msi_prob', 'rmsi_prob', 'pmsi_prob')]
+      #pro_swap <- abs(subset[1,1]-subset[1,2]) + abs(subset[1,1]-subset[2,3]) + abs(subset[2,1]-subset[2,2]) + abs(subset[2,1]-subset[1,3])
+      #pro_swap <- pro_swap + abs(subset[1,4]-subset[1,5]) + abs(subset[1,4]-subset[2,6]) + abs(subset[2,4]-subset[2,5]) + abs(subset[2,4]-subset[1,6])
+      #rna_swap <- abs(subset[1,1]-subset[2,2]) + abs(subset[1,1]-subset[1,3]) + abs(subset[2,1]-subset[1,2]) + abs(subset[2,1]-subset[2,3])
+      #rna_swap <- rna_swap + abs(subset[1,4]-subset[2,5]) + abs(subset[1,4]-subset[1,6]) + abs(subset[2,4]-subset[1,5]) + abs(subset[2,4]-subset[2,6])
+      
+      pro_swap <- 0
+      rna_swap <- 0
+      for(i in 1:length(clinical_attributes)){
+        subset <- traincli[c(r,p), c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        pro_swap <- pro_swap + abs(subset[1,1]-subset[1,2]) + abs(subset[1,1]-subset[2,3]) + abs(subset[2,1]-subset[2,2]) + abs(subset[2,1]-subset[1,3])
+        rna_swap <- rna_swap + abs(subset[1,1]-subset[2,2]) + abs(subset[1,1]-subset[1,3]) + abs(subset[2,1]-subset[1,2]) + abs(subset[2,1]-subset[2,3])
+      }
+      
       
       if (pro_swap < rna_swap){
         cat(sprintf('Proteome swap: %d <--> %d (RNA: %.3f vs PRO: %.3f) \n', r, p, rna_swap, pro_swap))
@@ -725,7 +855,15 @@ correctOmicsSwapping <- function(traincli, final_tab, nonmatch, rnamatch, pairdi
 
 
 ## Correct: Detect omics duplication + shifting and correct label
-correctOmicsShifting <- function(traincli, final_tab, dup_shift, rankdist, rnamatch, promatch, swapped, pairdist) {
+correctOmicsShifting <- function(traincli, final_tab, dup_shift, rankdist, 
+                                 rnamatch, promatch, swapped, pairdist,
+                                 clinical_attributes) {
+  # true probability
+  cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
+  # prediction probability
+  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  
   rnashift <- c()
   proshift <- c()
   if (length(dup_shift) == 0) {
@@ -774,21 +912,37 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, rankdist, rnama
         cat('Warning: chain tail', chain[length(chain)], 'is swapped samples!\n')
       }
       
-      subset <- traincli[chain, c('gender_prob', 'rgender_prob', 'pgender_prob', 'msi_prob', 'rmsi_prob', 'pmsi_prob')]
+      #subset <- traincli[chain, c('gender_prob', 'rgender_prob', 'pgender_prob', 'msi_prob', 'rmsi_prob', 'pmsi_prob')]
+      #lenchain <- length(chain)
+      #rna_shift <- sum(abs(subset[1:(lenchain-2), 1] - subset[2:(lenchain-1), 2])) + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 3])) + abs(subset[1,1] - subset[1,2])
+      #rna_shift <- rna_shift + sum(abs(subset[1:(lenchain-2), 4] - subset[2:(lenchain-1), 5])) + sum(abs(subset[2:lenchain, 4] - subset[2:lenchain, 6])) + abs(subset[1,4] - subset[1,5])
+      #pro_shift <- sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 2])) + sum(abs(subset[3:lenchain, 1] - subset[2:(lenchain-1), 3])) + abs(subset[lenchain,1] - subset[lenchain,3])
+      #pro_shift <- pro_shift + sum(abs(subset[2:lenchain, 4] - subset[2:lenchain, 5])) + sum(abs(subset[3:lenchain, 4] - subset[2:(lenchain-1), 6])) + abs(subset[lenchain,4] - subset[lenchain,6])
+      
+      rna_shift <- 0
+      pro_shift <- 0
       lenchain <- length(chain)
-      rna_shift <- sum(abs(subset[1:(lenchain-2), 1] - subset[2:(lenchain-1), 2])) + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 3])) + abs(subset[1,1] - subset[1,2])
-      rna_shift <- rna_shift + sum(abs(subset[1:(lenchain-2), 4] - subset[2:(lenchain-1), 5])) + sum(abs(subset[2:lenchain, 4] - subset[2:lenchain, 6])) + abs(subset[1,4] - subset[1,5])
-      pro_shift <- sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 2])) + sum(abs(subset[3:lenchain, 1] - subset[2:(lenchain-1), 3])) + abs(subset[lenchain,1] - subset[lenchain,3])
-      pro_shift <- pro_shift + sum(abs(subset[2:lenchain, 4] - subset[2:lenchain, 5])) + sum(abs(subset[3:lenchain, 4] - subset[2:(lenchain-1), 6])) + abs(subset[lenchain,4] - subset[lenchain,6])
+      for(i in 1:length(clinical_attributes)){
+        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        rna_shift <- rna_shift + sum(abs(subset[1:(lenchain-2), 1] - subset[2:(lenchain-1), 2])) + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 3])) + abs(subset[1,1] - subset[1,2])
+        pro_shift <- pro_shift + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 2])) + sum(abs(subset[3:lenchain, 1] - subset[2:(lenchain-1), 3])) + abs(subset[lenchain,1] - subset[lenchain,3])
+      }
       ## if rna_shift < pro_shift, means error rate for rna shifting is lower, means it is rna shifting
       
       distfront <- rankdist[chain[2], chain[1]]
       distback  <- rankdist[chain[lenchain], chain[lenchain-1]]
       ## if distback > distfront, means it is likely proteome duplication than RNAseq duplication
       
+      mean_true <- c()
+      for(i in 1:length(clinical_attributes)){
+        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        mean_true[i] <- mean(subset[, cli_attr_prob_names_true[i]][2:(lenchain-1)]) == 0 || mean(subset[, cli_attr_prob_names_true[i]][2:(lenchain-1)]) == 1
+      }
+      
       
       ## if all samples in a shifting chain the have same attribute (e.g. consistenly shifting ALL MALE & Low-MSI sample)
-      if ((mean(subset$gender_prob[2:(lenchain-1)]) == 0 || mean(subset$gender_prob[2:(lenchain-1)]) == 1) && (mean(subset$msi_prob[2:(lenchain-1)]) == 0 || mean(subset$msi_prob[2:(lenchain-1)]) == 1)) {
+      #if ((mean(subset$gender_prob[2:(lenchain-1)]) == 0 || mean(subset$gender_prob[2:(lenchain-1)]) == 1) && (mean(subset$msi_prob[2:(lenchain-1)]) == 0 || mean(subset$msi_prob[2:(lenchain-1)]) == 1)) {
+      if(all(mean_true)){
         if (distback > distfront) {
           cat('Same attr, so Proteome shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift))
           cat(sprintf('Distance: RNA_%d <-> PRO_%d = %.4f \t RNA_%d <-> PRO_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))

@@ -5,7 +5,8 @@ combine_methods=function(method1_folder, method2_folder,
                          clinical_attributes = c("gender"), 
                          out_dir = "./", prefix = "test"){
   
-  sj_intermediate_file <- paste(method1_folder,"/intermediate.csv", sep = "")
+  #sj_intermediate_file <- paste(method1_folder,"/intermediate.csv", sep = "")
+  sj_intermediate_file <- paste(method1_folder,"/clinical_attributes_pred.tsv", sep = "")
   sj_correlation_file <- paste(method1_folder,"/correlation.csv", sep = "")
   modelA_result_file <- paste(method2_folder,"/test_ModelA_result.csv", sep = "")
   modelB_result_file <- paste(method2_folder,"/test_ModelB_result.csv", sep = "")
@@ -119,12 +120,12 @@ combine_methods=function(method1_folder, method2_folder,
     # RNA
     #traincli$rgender_prob <- (sjcli$GenderByRNA + sentionrna$gender_prob) / 2
     #traincli$rmsi_prob <- (sjcli$MsiByRNA + sentionrna$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_rna[i]] <- ( sjcli[, paste(clinical_attributes[i],"ByRNA",sep = "")] + sentionrna[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    traincli[,cli_attr_prob_names_pred_rna[i]] <- ( sjcli[, cli_attr_prob_names_pred_rna[i]] + sentionrna[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
     # Protein
     #traincli$pgender_prob <- (sjcli$GenderByPRO + sentionpro$gender_prob) / 2
     #traincli$pmsi_prob <- (sjcli$MsiByPRO + sentionpro$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_pro[i]] <- ( sjcli[, paste(clinical_attributes[i],"ByPRO",sep = "")] + sentionpro[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    traincli[,cli_attr_prob_names_pred_pro[i]] <- ( sjcli[, cli_attr_prob_names_pred_pro[i]] + sentionpro[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
     # combine RNA and Protein
     #traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob) / 2
