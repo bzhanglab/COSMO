@@ -14,7 +14,7 @@ combine_methods=function(method1_folder, method2_folder,
   cli_data_file <- sample_annotation_file
   cli_data <- read.delim(cli_data_file,stringsAsFactors = FALSE)
   #sjcli <- read.table(sprintf('../../../results/for_2b/SoonJye2/intermediate/2b_intermediate_%d.csv', d), sep=',', header=T)
-  sjcli <- read.table(sj_intermediate_file, header=TRUE, sep = "\t", quote = FALSE)
+  sjcli <- read.table(sj_intermediate_file, header=TRUE, sep = "\t")
   
   out_prefix <- prefix
 
