@@ -81,7 +81,7 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./",
   #traincli$gender_prob <- apply(traincli, 1, function(x) if (x['gender'] == 'Female') 0 else 1)
   #traincli$msi_prob <- apply(traincli, 1, function(x) if (x['msi'] == 'MSI-High') 0 else 1)
   
-  traincli <- sjcli[, c('sample', clinical_attributes)]
+  traincli <- clinic[, c('sample', clinical_attributes)]
   # true probability
   cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
   for(i in 1:length(clinical_attributes)){
