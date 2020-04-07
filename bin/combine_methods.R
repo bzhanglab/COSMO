@@ -145,14 +145,20 @@ combine_methods=function(method1_folder, method2_folder,
   # gender_prob is true probability and pred_gender is predicted probability
   
   ## only consider gender
-  if("gender" %in% clinical_attributes){
-    high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
+  gender_label <- find_gender_label(clinical_attributes)
+  if(!is.na(gender_label)){
+    gender_prob <- paste(gender_label,"_prob",sep = "")
+    pred_gender <- paste("pred_",gender_label,sep = "")
+  
+    #high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
+    high_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.7)
     (high_suspect <- setdiff(high_suspect, nonmatch))
     if (length(high_suspect) > 0) {
       cat('Highly suspected Clinical swap case:', paste(high_suspect), '\n')
       final_tab$Clinical[high_suspect] <- -1
     }
-    cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
+    #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
     cli_suspect <- setdiff(cli_suspect, nonmatch)
     traincli[cli_suspect, ]
   }else{
