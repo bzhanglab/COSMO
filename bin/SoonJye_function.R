@@ -116,7 +116,7 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./",
   #### Second round of prediction (after removing RNA/PRO mismatched samples & clinical swapping cases)
   traincli <- predictLR(traincli, c(nonmatch, clinic_swap), rna_sex, rna_atsm, pro_sex, pro_atsm, clinical_attributes)
   
-  write.table(traincli,file = paste(out_dir,"/clinical_attributes_pred.tsv",sep = ""),col.names = TRUE,row.names = FALSE,quote = FALSE,sep = "\n")
+  write.table(traincli,file = paste(out_dir,"/clinical_attributes_pred.tsv",sep = ""),col.names = TRUE,row.names = FALSE,quote = FALSE,sep = "\t")
   
   ## output intermediate prediction file
   # for example: "sample","gender","GenderProvided","genderByRNA","genderByPRO","msi","MsiProvided","msiByRNA","msiByPRO"
