@@ -178,11 +178,30 @@ run_2b <- function(pro_file, rna_file, anno_file, out_dir="./",
 ## Preprocessing: annotate gene with chromosome information
 prpr_annotate <- function(geneSymbol, out_gene_file){
   cat('Annotating genes with chromosomes...\n')
-  mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl", host = "www.ensembl.org")     #ensemblRedirect = FALSE)
-  gene_info <- getBM(attributes=c('hgnc_symbol', 'chromosome_name'),
-                     filters='hgnc_symbol',
-                     values=geneSymbol,
-                     mart=mart)
+  
+  gene_info <- tryCatch({
+    cat("Try www.ensembl.org ...\n")
+    mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl", host = "www.ensembl.org")     #ensemblRedirect = FALSE)
+    gene_info_tmp <- getBM(attributes=c('hgnc_symbol', 'chromosome_name'),
+                       filters='hgnc_symbol',
+                       values=geneSymbol,
+                       mart=mart)
+    return(gene_info_tmp)
+  },error=function(e){
+    cat("Try http://uswest.ensembl.org/ ...\n")
+    mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl", host = "http://uswest.ensembl.org/")     #ensemblRedirect = FALSE)
+    gene_info_tmp <- getBM(attributes=c('hgnc_symbol', 'chromosome_name'),
+                       filters='hgnc_symbol',
+                       values=geneSymbol,
+                       mart=mart)
+    return(gene_info_tmp)
+  },
+  warning=function(cond){
+    print(cond)
+    message("Please see the file: kfoldCrossValidation.rda for related data!")
+    save(e,ann_use,net_data,r,kfold,ranNum,file="kfoldCrossValidation.rda")
+    return(NULL)
+  })
   
   cat('Annotation is complete, save annotation into file ', out_gene_file, '\n\n')
   write.table(gene_info, out_gene_file, sep='\t', col.names=T, row.names=F)
