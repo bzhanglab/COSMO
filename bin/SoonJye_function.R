@@ -346,7 +346,7 @@ getSexGenes <- function(gene_file){
 
 ## Load sample annotation data: test_cli.tsv
 getClinical <- function(anno_file){
-  clinic  <- read.table(anno_file, header=TRUE)
+  clinic  <- read.delim(anno_file, stringsAsFactors = FALSE)
   return(clinic)
 }
 
