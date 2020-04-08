@@ -79,9 +79,10 @@ process run_method_1 {
     pro_file <- "${pro_file}"
     rna_file <- "${rna_file}"
     sample_file <- "${sample_file}"
+    gene_file <- "${baseDir}/bin/genes.tsv"
     out_dir <- "method1_folder"
     clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
-    run_2b(pro_file, rna_file, sample_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
+    run_2b(pro_file, rna_file, sample_file, gene_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
 
     """
 }

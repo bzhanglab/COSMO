@@ -5,14 +5,14 @@ library(caret)
 library(parallel)
 library(doParallel)
 
-run_2b <- function(pro_file, rna_file, anno_file, out_dir="./",
+run_2b <- function(pro_file, rna_file, anno_file, gene_file, out_dir="./",
                    clinical_attributes=NA){
   
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   
   ########### Data Retrieval
   cat('Correcting dataset:', pro_file, " and ", rna_file , '... \n')
-  out_files <- preprocess(rna = rna_file, pro = pro_file, out_dir = out_dir)
+  out_files <- preprocess(rna_file, pro_file, gene_file, out_dir = out_dir)
   
   clinic  <- getClinical(anno_file)
   
@@ -305,7 +305,7 @@ prpr_rnaseq <- function(rnaseq, sexgenes){
 
 
 #### Preprocessing Module
-preprocess <- function(rna = rna_file, pro = pro_file, out_dir="./"){
+preprocess <- function(rna_file, pro_file, gene_file, out_dir="./"){
   
   ## load protein and RNA expression data
   proteome <- read.delim(pro_file, stringsAsFactors = FALSE)
@@ -314,7 +314,9 @@ preprocess <- function(rna = rna_file, pro = pro_file, out_dir="./"){
   ## annotate genes with chromosomes
   geneSymbol    <- union(rownames(proteome), rownames(rnaseq))
   out_gene_file <- paste0(out_dir, "/genes.tsv")
-  prpr_annotate(geneSymbol, out_gene_file)
+  gene_data <- read.delim(gene_file,stringsAsFactors = FALSE)
+  write.table(gene_data,file = out_gene_file,row.names = FALSE,col.names = TRUE,sep = "\t",quote = FALSE)
+  #prpr_annotate(geneSymbol, out_gene_file)
   sexgenes <- getSexGenes(out_gene_file)
   
   ## preprocessing rnaseq
