@@ -533,11 +533,13 @@ trainGLMcv <- function(msiLabel, inputmtx, alpha, k = 5){
     while (numvar < 4 && iter < 50){
       
       fit1 <- tryCatch({
-        mod_res <- trainGLM(msiLabel[-testidx], inputmtx[-testidx, ], 0.3)
-        return(mod_res)
+        fit1 <- trainGLM(msiLabel[-testidx], inputmtx[-testidx, ], 0.3)
+        fit1
       },error=function(e){
         save(msiLabel,testidx,inputmtx,testidx,f,file="trainGLM_input_data.rda")
+        cat("------\n")
         print(e)
+        cat("------\n")
         stop("Error in trainGLM\n")
         return(NULL)
       })
