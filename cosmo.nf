@@ -127,7 +127,7 @@ process combine_methods {
 
     container "cosmo:latest"
 
-    publishDir "${out_dir}/${final_res_folder}/", mode: "copy", overwrite: true
+    publishDir "${out_dir}/final_res_folder/", mode: "copy", overwrite: true
 
     input:
     file method1_out_folder
@@ -135,7 +135,7 @@ process combine_methods {
     file sample_file
 
     output:
-    file "*cosmo*" into final_res_folder
+    file "cosmo*" into final_res_folder
 
     script:
     """

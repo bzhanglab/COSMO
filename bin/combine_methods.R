@@ -378,7 +378,7 @@ combine_methods=function(method1_folder, method2_folder,
   }
   
   cat('\n')
-  out_file <- paste(out_dir,"/final_tab.tsv",sep = "")
+  out_file <- paste(out_dir,"/",out_prefix,"_final_result.tsv",sep = "")
   write.table(final_tab,out_file,col.names=TRUE, row.names=FALSE, sep=',')
 
 }
