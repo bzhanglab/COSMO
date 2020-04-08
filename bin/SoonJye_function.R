@@ -309,8 +309,8 @@ prpr_rnaseq <- function(rnaseq, sexgenes){
 preprocess <- function(rna_file, pro_file, gene_file, out_dir="./"){
   
   ## load protein and RNA expression data
-  proteome <- read.delim(pro_file, stringsAsFactors = FALSE)
-  rnaseq   <- read.delim(rna_file, stringsAsFactors = FALSE)
+  proteome <- read.delim(pro_file, stringsAsFactors = FALSE, check.names = FALSE)
+  rnaseq   <- read.delim(rna_file, stringsAsFactors = FALSE, check.names = FALSE)
   
   ## annotate genes with chromosomes
   geneSymbol    <- union(rownames(proteome), rownames(rnaseq))
@@ -347,7 +347,7 @@ getSexGenes <- function(gene_file){
 
 ## Load sample annotation data: test_cli.tsv
 getClinical <- function(anno_file){
-  clinic  <- read.delim(anno_file, stringsAsFactors = FALSE)
+  clinic  <- read.delim(anno_file, stringsAsFactors = FALSE,check.names = FALSE)
   return(clinic)
 }
 
