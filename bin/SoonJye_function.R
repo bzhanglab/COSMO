@@ -531,7 +531,17 @@ trainGLMcv <- function(msiLabel, inputmtx, alpha, k = 5){
     iter   <- 0
     cat('  Training Fold', f, '- Optimizing Model...')
     while (numvar < 4 && iter < 50){
-      fit1 <- trainGLM(msiLabel[-testidx], inputmtx[-testidx, ], 0.3)
+      
+      fit1 <- tryCatch({
+        mod_res <- trainGLM(msiLabel[-testidx], inputmtx[-testidx, ], 0.3)
+        return(mod_res)
+      },error=function(e){
+        save(msiLabel,testidx,inputmtx,testidx,f,file="trainGLM_input_data.rda")
+        print(e)
+        stop("Error in trainGLM\n")
+        return(NULL)
+      })
+      
       numvar1 <- sum(coef(fit1) > 0)
       if (numvar1 >= numvar) {
         fit <- fit1
