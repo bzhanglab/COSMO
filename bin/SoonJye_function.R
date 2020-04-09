@@ -5,6 +5,8 @@ library(caret)
 library(parallel)
 library(doParallel)
 
+set.seed(2020)
+
 run_2b <- function(pro_file, rna_file, anno_file, gene_file, out_dir="./",
                    clinical_attributes=NA){
   
@@ -537,9 +539,9 @@ trainGLMcv <- function(msiLabel, inputmtx, alpha, k = 5){
         fit1
       },error=function(e){
         save(msiLabel,testidx,inputmtx,testidx,f,file="trainGLM_input_data.rda")
-        cat("------\n")
+        cat("\n------\n")
         print(e)
-        cat("------\n")
+        cat("\n------\n")
         stop("Error in trainGLM\n")
         return(NULL)
       })
