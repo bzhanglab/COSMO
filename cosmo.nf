@@ -69,9 +69,9 @@ process pre_process {
     file sample_file
 
     output:
-    file "data_use/${pro_file.baseName}" into pro_file_use_1,pro_file_use_2
-    file "data_use/${rna_file.baseName}" into rna_file_use_1,rna_file_use_2
-    file "data_use/${sample_file.baseName}" into sample_file_use_1,sample_file_use_2
+    file "data_use/${pro_file.name}" into pro_file_use_1,pro_file_use_2
+    file "data_use/${rna_file.name}" into rna_file_use_1,rna_file_use_2
+    file "data_use/${sample_file.name}" into sample_file_use_1,sample_file_use_2
 
 
     script:
