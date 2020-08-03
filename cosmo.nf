@@ -22,8 +22,8 @@ def helpMessage() {
       --pro_file              Protein expression data at gene level.
       --rna_file              RNA expressio data at gene level.
       --cli_file              Sample annotation data.
-	  --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
-	                          must be separated by ",".
+      --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
+                              must be separated by ",".
       --out_dir               Output folder, default is "./output".
       --cpu                   The number of CPUs.
       --help                  Print help message.
@@ -54,6 +54,42 @@ if(!out_dir.isDirectory()){
 }
 
 
+process pre_process {
+	tag "preprocessing"
+
+	echo true
+
+	container "cosmo:latest"
+
+	publishDir "${out_dir}/", mode: "copy", overwrite: true
+
+    input:
+    file pro_file
+    file rna_file
+    file sample_file
+
+    output:
+    file "data_use/${pro_file.baseName}" into pro_file_use_1,pro_file_use_2
+    file "data_use/${rna_file.baseName}" into rna_file_use_1,rna_file_use_2
+    file "data_use/${sample_file.baseName}" into sample_file_use_1,sample_file_use_2
+
+
+    script:
+    """
+    #!/usr/bin/env /usr/local/bin/Rscript
+    source("${baseDir}/bin/tools.R")
+    pro_file <- "${pro_file}"
+    rna_file <- "${rna_file}"
+    sample_file <- "${sample_file}"
+    out_dir <- "data_use"
+    dir.create(out_dir)
+    format_input_data(pro_file, rna_file, sample_file, out_dir = out_dir)
+
+    """
+
+}
+
+
 process run_method_1 {
 
     tag "run_method_1"
@@ -65,9 +101,9 @@ process run_method_1 {
     publishDir "${out_dir}/method1_folder/", mode: "copy", overwrite: true
 
     input:
-    file pro_file
-    file rna_file
-    file sample_file
+    file pro_file_use_1
+    file rna_file_use_1
+    file sample_file_use_1
 
     output:
     file "method1_folder" into method1_out_folder
@@ -99,9 +135,9 @@ process run_method_2 {
     publishDir "${out_dir}/method2_folder/", mode: "copy", overwrite: true
 
     input:
-    file pro_file
-    file rna_file
-    file sample_file
+    file pro_file_use_2
+    file rna_file_use_2
+    file sample_file_use_2
 
     output:
     file "method2_folder" into method2_out_folder
