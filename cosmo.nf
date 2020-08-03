@@ -112,9 +112,9 @@ process run_method_1 {
     """
     #!/usr/bin/env /usr/local/bin/Rscript
     source("${baseDir}/bin/SoonJye_function.R")
-    pro_file <- "${pro_file}"
-    rna_file <- "${rna_file}"
-    sample_file <- "${sample_file}"
+    pro_file <- "${pro_file_use_1}"
+    rna_file <- "${rna_file_use_1}"
+    sample_file <- "${sample_file_use_1}"
     gene_file <- "${baseDir}/bin/genes.tsv"
     out_dir <- "method1_folder"
     clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
