@@ -320,7 +320,12 @@ preprocess <- function(rna_file, pro_file, gene_file, out_dir="./"){
   gene_data <- read.delim(gene_file,stringsAsFactors = FALSE)
   write.table(gene_data,file = out_gene_file,row.names = FALSE,col.names = TRUE,sep = "\t",quote = FALSE)
   #prpr_annotate(geneSymbol, out_gene_file)
-  sexgenes <- getSexGenes(out_gene_file)
+  
+  if(sum(grepl(pattern="^ENSG",x=row.names(proteome)))/nrow(proteome) > 0.5){
+    sexgenes <- getSexGenes(out_gene_file,id_type = "ensg")
+  }else{
+    sexgenes <- getSexGenes(out_gene_file,id_type = "hgnc_symbol")
+  }
   
   ## preprocessing rnaseq
   rnaseq   <- prpr_rnaseq(rnaseq, sexgenes)
@@ -339,10 +344,10 @@ preprocess <- function(rna_file, pro_file, gene_file, out_dir="./"){
 
 
 ## Load: gene chromosome annotation
-getSexGenes <- function(gene_file){
+getSexGenes <- function(gene_file,id_type="hgnc_symbol"){
   gene_info <- read.delim(gene_file, stringsAsFactors = FALSE)
   sexgenes <- which(gene_info$chromosome_name %in% c('X', 'Y'))
-  sexgenes <- gene_info$hgnc_symbol[sexgenes]
+  sexgenes <- unique(gene_info[,id_type][sexgenes])
   return(sexgenes)
 }
 
@@ -357,7 +362,14 @@ getClinical <- function(anno_file){
 ## Load RNAseq
 getRNAseq <- function(rna_file, gene_file){
   rnaseq   <- read.delim(rna_file, stringsAsFactors = FALSE)
-  sexgenes <- getSexGenes(gene_file)
+  
+  if(sum(grepl(pattern="^ENSG",x=row.names(rnaseq)))/nrow(rnaseq) > 0.5){
+    sexgenes <- getSexGenes(gene_file,id_type = "ensg")
+  }else{
+    sexgenes <- getSexGenes(gene_file,id_type = "hgnc_symbol")
+  }
+  
+  #sexgenes <- getSexGenes(gene_file)
   
   rna_atsm <- rnaseq[, setdiff(colnames(rnaseq), sexgenes)]
   rna_sex  <- rnaseq[, intersect(colnames(rnaseq), sexgenes)]
@@ -372,7 +384,13 @@ getRNAseq <- function(rna_file, gene_file){
 ## Load proteomic
 getProteome <- function(pro_file, gene_file){
   proteome <- read.delim(pro_file, stringsAsFactors = FALSE)
-  sexgenes <- getSexGenes(gene_file)
+  
+  if(sum(grepl(pattern="^ENSG",x=row.names(proteome)))/nrow(proteome) > 0.5){
+    sexgenes <- getSexGenes(gene_file,id_type = "ensg")
+  }else{
+    sexgenes <- getSexGenes(gene_file,id_type = "hgnc_symbol")
+  }
+  #sexgenes <- getSexGenes(gene_file)
   
   pro_atsm <- proteome[, setdiff(colnames(proteome), sexgenes)]
   pro_sex  <- proteome[, intersect(colnames(proteome), sexgenes)]
