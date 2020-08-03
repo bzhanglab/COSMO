@@ -27,6 +27,11 @@ format_input_data = function(pro_file,rna_file,cli_file,out_dir="./"){
         cat("Remove rows with all NA in file: ",rna_file,", ",sum(rows_all_na),"\n")
         rnaseq <- rnaseq[!rows_all_na,]
     }
+
+	cat("Features in file ",pro_file,": ",nrow(proteome),"\n")
+	cat("Features in file ",rna_file,": ",nrow(rnaseq),"\n")
+	cat("Data range in file ",pro_file,": ",paste(range(proteome,na.rm = TRUE),collapse = " to "),"\n")
+	cat("Data range in file ",rna_file,": ",paste(range(rnaseq,na.rm = TRUE),collapse = " to "),"\n")
     
     ## output
     write.table(x = proteome,file = paste(out_dir,"/",basename(pro_file),sep = ""),quote = FALSE,sep = "\t",row.names = TRUE,col.names = TRUE)
