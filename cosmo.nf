@@ -145,9 +145,9 @@ process run_method_2 {
     script:
     """
     python ${baseDir}/bin/sentieon.py \
-        -pro ${pro_file} \
-        -rna ${rna_file} \
-        -s ${sample_file} \
+        -pro ${pro_file_use_2} \
+        -rna ${rna_file_use_2} \
+        -s ${sample_file_use_2} \
         -l ${sample_label} \
         -o method2_folder
 
