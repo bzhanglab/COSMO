@@ -602,6 +602,7 @@ predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
     if(is_gender(clinical_attributes[i])){
       ## gender prediction
       cat("Predicting ", clinical_attributes[i] ," from RNA... \n")
+      save(traincli,clinical_attributes,i,nonmatch,rna_sex,pro_sex,file="trainGLMcv_input_debug.rda")
       predoutput_rna <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], rna_sex[-nonmatch, ], 0.3)
       cat("Predicting ", clinical_attributes[i] ," from Protein... \n")
       predoutput_pro <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], pro_sex[-nonmatch, ], 0.3)
@@ -609,6 +610,7 @@ predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
     }else{
       ## non-gender attribute prediction
       cat("Predicting ", clinical_attributes[i] ," from RNA... \n")
+	  save(traincli,clinical_attributes,i,nonmatch,rna_atsm,pro_atsm,file="trainGLMcv_input_debug.rda")
       predoutput_rna <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], rna_atsm[-nonmatch, ], 0.3)
       cat("Predicting ", clinical_attributes[i] ," from Protein... \n")
       predoutput_pro <- trainGLMcv(traincli[,clinical_attributes[i]][-nonmatch], pro_atsm[-nonmatch, ], 0.3)
