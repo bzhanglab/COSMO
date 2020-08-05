@@ -348,6 +348,7 @@ getSexGenes <- function(gene_file,id_type="hgnc_symbol"){
   gene_info <- read.delim(gene_file, stringsAsFactors = FALSE)
   sexgenes <- which(gene_info$chromosome_name %in% c('X', 'Y'))
   sexgenes <- unique(gene_info[,id_type][sexgenes])
+  cat("Genes in X or Y:",length(sexgenes),"\n")
   return(sexgenes)
 }
 
@@ -363,7 +364,8 @@ getClinical <- function(anno_file){
 getRNAseq <- function(rna_file, gene_file){
   rnaseq   <- read.delim(rna_file, stringsAsFactors = FALSE)
   
-  if(sum(grepl(pattern="^ENSG",x=row.names(rnaseq)))/nrow(rnaseq) > 0.5){
+  # each column is a gene
+  if(sum(grepl(pattern="^ENSG",x=colnames(rnaseq)))/ncol(rnaseq) > 0.5){
     sexgenes <- getSexGenes(gene_file,id_type = "ensg")
   }else{
     sexgenes <- getSexGenes(gene_file,id_type = "hgnc_symbol")
@@ -385,7 +387,7 @@ getRNAseq <- function(rna_file, gene_file){
 getProteome <- function(pro_file, gene_file){
   proteome <- read.delim(pro_file, stringsAsFactors = FALSE)
   
-  if(sum(grepl(pattern="^ENSG",x=row.names(proteome)))/nrow(proteome) > 0.5){
+  if(sum(grepl(pattern="^ENSG",x=colnames(proteome)))/ncol(proteome) > 0.5){
     sexgenes <- getSexGenes(gene_file,id_type = "ensg")
   }else{
     sexgenes <- getSexGenes(gene_file,id_type = "hgnc_symbol")
