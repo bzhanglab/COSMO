@@ -55,13 +55,13 @@ if(!out_dir.isDirectory()){
 
 
 process pre_process {
-	tag "preprocessing"
-
-	echo true
-
-	container "cosmo:latest"
-
-	publishDir "${out_dir}/", mode: "copy", overwrite: true
+    tag "preprocessing"
+    
+    echo true
+    
+    container "proteomics/cosmo:latest"
+    
+    publishDir "${out_dir}/", mode: "copy", overwrite: true
 
     input:
     file pro_file
@@ -96,7 +96,7 @@ process run_method_1 {
 
     echo true
 
-    container "cosmo:latest"
+    container "proteomics/cosmo:latest"
 
     publishDir "${out_dir}/method1_folder/", mode: "copy", overwrite: true
 
@@ -130,7 +130,7 @@ process run_method_2 {
 
     echo true
 
-    container "cosmo:latest"
+    container "proteomics/cosmo:latest"
 
     publishDir "${out_dir}/method2_folder/", mode: "copy", overwrite: true
 
@@ -161,7 +161,7 @@ process combine_methods {
 
     echo true
 
-    container "cosmo:latest"
+    container "proteomics/cosmo:latest"
 
     publishDir "${out_dir}/final_res_folder/", mode: "copy", overwrite: true
 
