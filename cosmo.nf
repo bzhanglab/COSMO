@@ -111,7 +111,7 @@ process run_method_1 {
     script:
     """
     #!/usr/bin/env /usr/local/bin/Rscript
-    source("${baseDir}/bin/SoonJye_function.R")
+    source("${baseDir}/bin/method1_function.R")
     pro_file <- "${pro_file_use_1}"
     rna_file <- "${rna_file_use_1}"
     sample_file <- "${sample_file_use_1}"
@@ -144,7 +144,7 @@ process run_method_2 {
 
     script:
     """
-    python ${baseDir}/bin/sentieon.py \
+    python ${baseDir}/bin/method2_function.py \
         -pro ${pro_file_use_2} \
         -rna ${rna_file_use_2} \
         -s ${sample_file_use_2} \
@@ -176,7 +176,7 @@ process combine_methods {
     script:
     """
     #!/usr/bin/env /usr/local/bin/Rscript
-    source("${baseDir}/bin/SoonJye_function.R")
+    source("${baseDir}/bin/method1_function.R")
     source("${baseDir}/bin/combine_methods.R")
     method1_folder <- "${method1_out_folder}"
     method2_folder <- "${method2_out_folder}"
