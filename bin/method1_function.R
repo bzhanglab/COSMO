@@ -186,99 +186,51 @@ prpr_annotate <- function(geneSymbol, out_gene_file){
 }
 
 
-## Preprocessing: proteomic
-prpr_proteome <- function(proteome, sexgenes) {
-  cat('Preprocessing proteomics... \n')
+## preprocessing: omics
+prpr_omics <- function(omicsdata, sexgenes) {
+  cat('Preprocessing omics data... \n')
   
-  ## partition proteome into sex genes and autosomal genes
-  sex_pro  <- proteome[intersect(rownames(proteome), sexgenes), ]
-  auto_pro <- proteome[setdiff(rownames(proteome), sexgenes), ]
-  
-  # Remove any sex gene which expression values is NA in all samples
-  pmiss <- apply(sex_pro, 1, function(x) sum(is.na(x)))
-  pmiss <- which(pmiss == ncol(sex_pro))
-  if (length(pmiss) > 0) {
-    cat('  ', length(pmiss), 'sex gene(s) has NA in ALL samples - removed... \n')
-    sex_pro <- sex_pro[-pmiss, ]
-  }
-  # Replace missing value as 0 in sex genes
-  sex_pro <- t(sex_pro)
-  sex_pro[is.na(sex_pro)] <- 0
-  
-  # Remove any automosal gene with > 50% missing values
-  pmiss <- apply(auto_pro, 1, function(x) sum(is.na(x)))
-  pmiss <- which(pmiss > (ncol(auto_pro)/2))
-  if (length(pmiss) > 0) {
-    cat('  ', length(pmiss), 'of autosomal gene(s) has NA in > 50% samples - removed... \n')
-    auto_pro <- auto_pro[-pmiss, ]
-  }
-  # Impute missing value in autosomal genes if >= 30% of genes has missing values; else remove
-  missingrow <- nrow(auto_pro) - nrow(na.omit(auto_pro))
-  missingPct <- missingrow / nrow(auto_pro)
-  if (missingPct >= 0.30) {
-    cat('  ', sprintf('%d(%.2f%%) of autosomal gene(s) has NA missing values - impute missing values... \n', missingrow, missingPct))
-    auto_pro <- t(auto_pro)
-    cl <- makeCluster(detectCores())
-    registerDoParallel(cl)
-    auto_imp <- missForest(auto_pro, parallelize="variables")
-    stopCluster(cl)
-    auto_pro <- auto_imp$ximp
-  } else {
-    cat('  ', sprintf('%d(%.2f%%) of autosomal gene(s) has NA missing values - removed... \n', missingrow, missingPct))
-    auto_pro <- na.omit(auto_pro)
-    auto_pro <- t(auto_pro)
-  }
-  
-  proteome <- cbind(sex_pro, auto_pro)
-  return(proteome)
-}
-
-
-## preprocessing: rnaseq
-prpr_rnaseq <- function(rnaseq, sexgenes){
-  cat('Preprocessing RNAseq... \n')
-  
-  ## partition into sex genes and autosomal genes
-  sex_rna  <- rnaseq[intersect(rownames(rnaseq), sexgenes), ]
-  auto_rna <- rnaseq[setdiff(rownames(rnaseq), sexgenes), ]
+  ## partition omics data into sex genes and autosomal genes
+  sex_omic  <- omicsdata[intersect(rownames(omicsdata), sexgenes), ]
+  auto_omic <- omicsdata[setdiff(rownames(omicsdata), sexgenes), ]
   
   # Remove any sex gene which expression values is NA in all samples
-  pmiss <- apply(sex_rna, 1, function(x) sum(is.na(x)))
-  pmiss <- which(pmiss == ncol(sex_rna))
+  pmiss <- apply(sex_omic, 1, function(x) sum(is.na(x)))
+  pmiss <- which(pmiss == ncol(sex_omic))
   if (length(pmiss) > 0) {
     cat('  ', length(pmiss), 'sex gene(s) has NA in ALL samples - removed... \n')
-    sex_rna <- sex_rna[-pmiss, ]
+    sex_omic <- sex_omic[-pmiss, ]
   }
   # Replace missing value as 0 in sex genes
-  sex_rna <- t(sex_rna)
-  sex_rna[is.na(sex_rna)] <- 0
+  sex_omic <- t(sex_omic)
+  sex_omic[is.na(sex_omic)] <- 0
   
   # Remove any automosal gene with > 50% missing values
-  pmiss <- apply(auto_rna, 1, function(x) sum(is.na(x)))
-  pmiss <- which(pmiss > (ncol(auto_rna)/2))
+  pmiss <- apply(auto_omic, 1, function(x) sum(is.na(x)))
+  pmiss <- which(pmiss > (ncol(auto_omic)/2))
   if (length(pmiss) > 0) {
     cat('  ', length(pmiss), 'of autosomal gene(s) has NA in > 50% samples - removed... \n')
-    auto_rna <- auto_rna[-pmiss, ]
+    auto_omic <- auto_omic[-pmiss, ]
   }
   # Impute missing value in autosomal genes if >= 30% of genes has missing values; else remove
-  missingrow <- nrow(auto_rna) - nrow(na.omit(auto_rna))
-  missingPct <- missingrow / nrow(auto_rna)
+  missingrow <- nrow(auto_omic) - nrow(na.omit(auto_omic))
+  missingPct <- missingrow / nrow(auto_omic)
   if (missingPct >= 0.30) {
     cat('  ', sprintf('%d(%.2f%%) of autosomal gene(s) has NA missing values - impute missing values... \n', missingrow, missingPct))
-    auto_rna <- t(auto_rna)
+    auto_omic <- t(auto_omic)
     cl <- makeCluster(detectCores())
     registerDoParallel(cl)
-    auto_imp <- missForest(auto_rna, parallelize="variables")
+    auto_imp <- missForest(auto_omic, parallelize="variables")
     stopCluster(cl)
-    auto_rna <- auto_imp$ximp
+    auto_omic <- auto_imp$ximp
   } else {
     cat('  ', sprintf('%d(%.2f%%) of autosomal gene(s) has NA missing values - removed... \n', missingrow, missingPct))
-    auto_rna <- na.omit(auto_rna)
-    auto_rna <- t(auto_rna)
+    auto_omic <- na.omit(auto_omic)
+    auto_omic <- t(auto_omic)
   }
   
-  rnaseq <- cbind(sex_rna, auto_rna)
-  return(rnaseq)
+  omicsdata <- cbind(sex_omic, auto_omic)
+  return(omicsdata)
 }
 
 
@@ -303,12 +255,12 @@ preprocess <- function(rna_file, pro_file, gene_file, out_dir="./"){
   }
   
   ## preprocessing rnaseq
-  rnaseq   <- prpr_rnaseq(rnaseq, sexgenes)
+  rnaseq   <- prpr_omics(rnaseq, sexgenes)
   out_RNA  <- paste0(out_dir, "/rnaseq.tsv")
   write.table(rnaseq, out_RNA, row.names=TRUE, col.names=TRUE, sep='\t')
   
   ## preprocessing proteomic
-  proteome <- prpr_proteome(proteome, sexgenes)
+  proteome <- prpr_omics(proteome, sexgenes)
   out_PRO  <- paste0(out_dir, "/proteomic.tsv")
   write.table(proteome, out_PRO, row.names=TRUE, col.names=TRUE, sep='\t')
   
