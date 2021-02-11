@@ -53,12 +53,15 @@ run_2b <- function(pro_file, rna_file, anno_file, gene_file, out_dir="./",
   cor_file <- paste0(out_dir,"/sample_correlation.csv")
   write.table(corsample, cor_file , col.names=TRUE, row.names=TRUE, sep=',')
   
+  match_file <- paste0(out_dir, "/pairwise_matching.tsv")
+  write.table(pairdist, match_file , col.names=TRUE, sep='\t')
+  
   png(paste0(out_dir, '/sample_correlation.png'), width = 600, height = 600)
   heatmap(corsample, Rowv=NA, Colv = NA, scale='none')
   dev.off()
   
-  #### Determine spurious match due to being left out (threshold is log of n)
-  spumatch <- which(1:sample_n == rnamatch & pairdist$distance >= log(sample_n))
+  #### Determine spurious match due to being left out (threshold = argmax(2, n*0.1))
+  spumatch <- which(1:sample_n == rnamatch & pairdist$distance >= max(2, sample_n/10))
   if (length(spumatch) > 0){
     nonmatch <- c(nonmatch, spumatch)
     cat('  Spurious match:', paste(spumatch), '\n')
@@ -98,7 +101,6 @@ run_2b <- function(pro_file, rna_file, anno_file, gene_file, out_dir="./",
 
   
   clinic_swap <- flagClinicalSwap(traincli, nonmatch, clinical_attributes)
-  cat('Clinical Label potential swapping:', paste0(clinic_swap), '\n\n')
   
   
   #### Second round of prediction (after removing RNA/PRO mismatched samples & clinical swapping cases)
@@ -275,7 +277,6 @@ getSexGenes <- function(gene_file, id_type="hgnc_symbol"){
   gene_info <- read.delim(gene_file, stringsAsFactors = FALSE)
   sexgenes <- which(gene_info$chromosome_name %in% c('X', 'Y'))
   sexgenes <- unique(gene_info[, id_type][sexgenes])
-  cat("Number of genes in chromosomes X or Y = ",length(sexgenes),"\n")
   return(sexgenes)
 }
 
@@ -390,7 +391,6 @@ getMatching <- function(cormatrix){
   pairdist$prorank <- apply(pairdist, 1, function(x) fmlerank[as.numeric(x['rna']), as.numeric(x['pro'])])
   pairdist$distance <- pairdist$rnarank + pairdist$prorank
   pairdist$correlation <- apply(pairdist, 1, function(x) cormatrix[as.numeric(x['rna']), as.numeric(x['pro'])])
-  pairdist$probability <- apply(pairdist, 1, function(x) probmatrix[as.numeric(x['rna']), as.numeric(x['pro'])])
   
   return(pairdist)
 }
