@@ -468,10 +468,12 @@ trainGLM <- function(msiLabel, rnamatrix, alpha){
   }   # should be nrow(trainset)
   
   # perform cross validation of elasticnet to determine optimum lambda
-  cv.glm <- cv.glmnet(as.matrix(rnamatrix), msiLabel, family="binomial", weights=weight, alpha=alpha)
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
+  cv.glm <- cv.glmnet(as.matrix(rnamatrix), msiLabel, family="binomial", weights=weight, alpha=alpha, parallel=TRUE)
   (best_lambda <- cv.glm$lambda.1se)
   fit <- glmnet(as.matrix(rnamatrix), msiLabel, family="binomial", weights=weight, alpha=alpha, lambda=best_lambda)
-  
+  stopCluster(cl)
   return(fit)
 }
 
