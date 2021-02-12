@@ -79,7 +79,7 @@ def ensemble(model, X, Y, Y_pred):
     # loo = LeaveOneOut()
     seed(1)
     for i in range(rand_times):
-        # print(i)
+        print("Repeat %d" % (i))
         s = randint(0, 10 ** 6)
         loo = StratifiedKFold(n_splits=5, random_state=s, shuffle=True)
         split_num = loo.get_n_splits(X)
