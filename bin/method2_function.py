@@ -72,7 +72,7 @@ import sys
 
 warnings.filterwarnings('ignore')
 
-rand_times = 100
+rand_times = 20
 
 
 def ensemble(model, X, Y, Y_pred):
