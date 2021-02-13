@@ -664,7 +664,7 @@ predictLR <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
       numvar <- 0
       iter <- 0
       cat('Training RNA model for ',clinical_attributes[i],"\n",sep = "")
-      while (numvar < 4){
+      while (numvar < 4 && iter < 50){
         fit <- trainGLM(traincli[,clinical_attributes[i]][matchingidx], rna_sex[matchingidx, ], 0.3)
         numvar <- sum(coef(fit) > 0)
         iter <- iter + 1
