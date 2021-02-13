@@ -468,12 +468,10 @@ trainGLM <- function(msiLabel, rnamatrix, alpha){
   }   # should be nrow(trainset)
   
   # perform cross validation of elasticnet to determine optimum lambda
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
+  
   cv.glm <- cv.glmnet(as.matrix(rnamatrix), msiLabel, family="binomial", weights=weight, alpha=alpha, parallel=TRUE)
   (best_lambda <- cv.glm$lambda.1se)
   fit <- glmnet(as.matrix(rnamatrix), msiLabel, family="binomial", weights=weight, alpha=alpha, lambda=best_lambda)
-  stopCluster(cl)
   return(fit)
 }
 
@@ -537,6 +535,9 @@ predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
   # true probability
   cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
   
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
+  
   for(i in 1:length(clinical_attributes)){
     if(is_gender(clinical_attributes[i])){
       ## gender prediction
@@ -568,6 +569,8 @@ predictCV <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
     traincli[,cli_attr_prob_names_pred_pro[i]][matchingidx] <- predoutput_pro$att_prob
     
   }
+  
+  stopCluster(cl)
   
   return(traincli)
 }
@@ -658,6 +661,8 @@ predictLR <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
   cli_attr_prob_names_rna <- paste("r",clinical_attributes,sep = "")
   cli_attr_prob_names_pro <- paste("p",clinical_attributes,sep = "")
   
+  cl <- makeCluster(detectCores())
+  registerDoParallel(cl)
   
   for(i in 1:length(clinical_attributes)){
     if(is_gender(clinical_attributes[i])){
@@ -723,6 +728,9 @@ predictLR <- function(traincli, nonmatch, rna_sex, rna_atsm, pro_sex, pro_atsm,
     }
     
   }
+  
+  stopCluster(cl)
+  
   
   return(traincli)
 }
