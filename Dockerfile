@@ -51,6 +51,8 @@ RUN echo "options(defaultPackages=c(getOption('defaultPackages'),'BiocManager'))
 
 RUN chmod -R 755 /opt/
 
+ADD bin /opt/bin
+
 #change working directory
 WORKDIR /opt/
 
