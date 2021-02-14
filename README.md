@@ -1,3 +1,9 @@
+---
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
 # COSMO
 
 ## Overview
@@ -24,28 +30,30 @@ All other tools used by COSMO have been dockerized and will be automatically ins
 
 ```sh
 ○ → nextflow run cosmo.nf --help
-N E X T F L O W  ~  version 20.01.0-edge
-Launching `cosmo.nf` [ecstatic_leakey] - revision: b1e348ec8f
+N E X T F L O W  ~  version 21.02.0-edge
+Launching `cosmo.nf` [high_noyce] - revision: 46dc5c6c96
 =========================================
 COSMO => COrrection of Sample Mislabeling by Omics
 =========================================
 Usage:
 nextflow run cosmo.nf
  Arguments:
-   --pro_file              Protein expression data at gene level.
-   --rna_file              RNA expressio data at gene level.
+   --d1_file               Dataset with quantification data at gene level.
+   --d2_file               Dataset with quantification data at gene level.
+   --d1_type               The type for dataset d1. This is used to label the dataset in the output files.
+   --d2_type               The type for dataset d2. This is used to label the dataset in the output files.
    --cli_file              Sample annotation data.
    --cli_attribute         Sample attribute(s) for prediction. Multiple attributes
                            must be separated by ",".
    --out_dir               Output folder, default is "./output".
-   --cpu                   The number of CPUs.
+   --threads               The number of threads.
    --help                  Print help message.
 
 
 ```
 
 ### Input
-The formats for both protein expression and mRNA expression data are the same. An example input of protein expression data (`--pro_file`) is shown below. The first column is the `gene ID` and all the other columns are the expression of proteins at gene level in different samples.
+The formats for both datasets (`--d1_file`, `--d2_file`) are the same. An example input of quantification dataset (`--d1_file` or `--d2_file`) is shown below. The first column is the `gene ID` and all the other columns are the expression of proteins at gene level in different samples.
 
 |  |Testing_1 | Testing_2 | Testing_3 | Testing_4 | Testing_5 | Testing_6 | Testing_7 | Testing_8 | Testing_9 | Testing_10 |        |
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|------------|--------|--------|
@@ -56,17 +64,6 @@ The formats for both protein expression and mRNA expression data are the same. A
 | AAGAB     | NA        | NA        | 0.9982    | NA        | 1.0282    | 1.6296    | NA        | NA        | 1.8141     | NA     |
 | AAK1      | 1.0459    | 2.5435    | 1.7449    | NA        | 1.0653    | 0.9855    | 2.0395    | 1.1588    | NA         | NA     |
 
-
-An example input of mRNA expression data (`--rna_file`) is shown below. The first column is the `gene ID` and all the other columns are the expression of proteins at gene level in different samples.
-
-| |Testing_1 | Testing_2 | Testing_3 | Testing_4 | Testing_5 | Testing_6 | Testing_7 | Testing_8 | Testing_9 | Testing_10 |        |
-|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|------------|--------|--------|
-| A1BG      | 0.9394    | 1.0705    | 0.8846    | 1.5374    | 0.5717    | 1.3097    | 1.18      | 1.5178    | 0.1149     | 0.6317 |
-| A1BG-AS1  | 0.2308    | 0.3563    | 0.1353    | 0.2406    | NA        | 0.4888    | 0.8254    | 0.1141    | 0.6046     | 0.0892 |
-| A1CF      | 3.0512    | 2.9937    | 3.899     | 2.6612    | 3.0792    | 3.0881    | 2.1438    | 2.5478    | 2.9139     | 3.512  |
-| A2M       | 6.2435    | 7.0947    | 6.232     | 5.3562    | 5.1192    | 7.3476    | 7.7089    | 7.3525    | 5.8959     | 5.8222 |
-| A2M-AS1   | 0.9291    | 1.5417    | 0.399     | 0.8889    | 0.6882    | 1.7131    | 1.6557    | 1.9314    | 1.0677     | 1.3866 |
-| A4GALT    | 1.9879    | 2.4708    | 1.4499    | 1.6679    | 1.8073    | 2.723     | 3.1722    | 3.5627    | 1.6291     | 2.1256 |
 
 The input for parameter `--sample_file` is the sample annotation file and an example is shown below:
 
@@ -86,8 +83,8 @@ The input for parameter `--sample_file` is the sample annotation file and an exa
 
 Below is an example run COSMO:
 ```sh
-nextflow run cosmo.nf --pro_file example_data/for_2b/Testing_1/test_pro.tsv \
-    --rna_file example_data/for_2b/Testing_1/test_rna.tsv \
+nextflow run cosmo.nf --d1_file example_data/for_2b/Testing_1/test_pro.tsv \
+    --d2_file example_data/for_2b/Testing_1/test_rna.tsv \
     --cli_file example_data/for_2b/Testing_1/test_cli.tsv \
     --cli_attribute "gender,msi" \
     --out_dir output

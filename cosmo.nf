@@ -1,12 +1,14 @@
 #!/usr/bin/env nextflow
 
-params.help        = false 
-params.pro_file    = "-"
-params.rna_file    = "-"
-params.cli_file    = ""
+params.help          = false 
+params.d1_file       = "-"
+params.d2_file       = "-"
+params.d1_type       = "-"
+params.d2_type       = "-"
+params.cli_file      = "-"
 params.cli_attribute = "-"
-params.cpu         = 0
-params.out_dir     = "./output"
+params.threads       = 4
+params.out_dir       = "./output"
 
 
 /* Prints help when asked for and exits */
@@ -19,13 +21,15 @@ def helpMessage() {
     Usage:
     nextflow run cosmo.nf
     Arguments:
-      --pro_file              Protein expression data at gene level.
-      --rna_file              RNA expressio data at gene level.
+      --d1_file               Dataset with quantification data at gene level.
+      --d2_file               Dataset with quantification data at gene level.
+      --d1_type               The type for dataset d1. This is used to label the dataset in the output files.
+      --d2_type               The type for dataset d2. This is used to label the dataset in the output files.
       --cli_file              Sample annotation data.
       --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
                               must be separated by ",".
       --out_dir               Output folder, default is "./output".
-      --cpu                   The number of CPUs.
+      --threads               The number of threads.
       --help                  Print help message.
     """.stripIndent()
 }
@@ -39,12 +43,50 @@ if (params.help){
 
 
 
-pro_file    = file(params.pro_file)
-rna_file    = file(params.rna_file)
+d1_file     = file(params.d1_file)
+d2_file     = file(params.d2_file)
+d1_type     = params.d1_type
+d2_type     = file(params.d2_type)
 sample_file = file(params.cli_file)
 sample_label= params.cli_attribute
 out_dir     = file(params.out_dir)
-cpus        = params.cpu
+threads     = params.threads
+
+
+
+if("${d1_file}" == "-" || !d1_file.exists()){
+    if("${d1_file}" =~ /-$/){
+        println "There is no file provided to --d1_file!"
+        helpMessage()
+        exit 0
+    }else{    
+        exit 1, "\n${d1_file} does not exist!\n"
+    }
+}
+
+if("${d2_file}" == "-" || !d2_file.exists()){
+    if("${d2_file}" =~ /-$/){
+        println "There is no file provided to --d2_file!"
+        helpMessage()
+        exit 0
+    }else{    
+        exit 1, "\n${d2_file} does not exist!\n"
+    }
+}
+
+if("${sample_file}" == "-" || !sample_file.exists()){
+    if("${sample_file}" =~ /-$/){
+        println "There is no file provided to --sample_file!"
+        helpMessage()
+        exit 0
+    }else{    
+        exit 1, "\n${sample_file} does not exist!\n"
+    }
+}
+
+if(params.threads <= 0 || threads <= 0){
+    threads = 4
+}
 
 println "sample attribute will be used: $sample_label \n"
 
@@ -52,6 +94,8 @@ if(!out_dir.isDirectory()){
     out_dir_result = out_dir.mkdirs()
     println out_dir_result ? "Create folder: $out_dir!" : "Cannot create directory: $myDir!"
 }
+
+
 
 
 process pre_process {
@@ -64,13 +108,13 @@ process pre_process {
     publishDir "${out_dir}/", mode: "copy", overwrite: true
 
     input:
-    file pro_file
-    file rna_file
+    file d1_file
+    file d2_file
     file sample_file
 
     output:
-    file "data_use/${pro_file.name}" into pro_file_use_1,pro_file_use_2
-    file "data_use/${rna_file.name}" into rna_file_use_1,rna_file_use_2
+    file "data_use/${d1_file.name}" into d1_file_use_1,d1_file_use_2
+    file "data_use/${d2_file.name}" into d2_file_use_1,d2_file_use_2
     file "data_use/${sample_file.name}" into sample_file_use_1,sample_file_use_2
 
 
@@ -78,12 +122,12 @@ process pre_process {
     """
     #!/usr/bin/env /usr/local/bin/Rscript
     source("${baseDir}/bin/tools.R")
-    pro_file <- "${pro_file}"
-    rna_file <- "${rna_file}"
+    d1_file <- "${d1_file}"
+    d2_file <- "${d2_file}"
     sample_file <- "${sample_file}"
     out_dir <- "data_use"
     dir.create(out_dir)
-    format_input_data(pro_file, rna_file, sample_file, out_dir = out_dir)
+    format_input_data(d1_file, d2_file, sample_file, out_dir = out_dir)
 
     """
 
@@ -94,6 +138,8 @@ process run_method_1 {
 
     tag "run_method_1"
 
+    //cpus ${threads}
+
     echo true
 
     container "proteomics/cosmo:latest"
@@ -101,8 +147,8 @@ process run_method_1 {
     publishDir "${out_dir}/method1_folder/", mode: "copy", overwrite: true
 
     input:
-    file pro_file_use_1
-    file rna_file_use_1
+    file d1_file_use_1
+    file d2_file_use_1
     file sample_file_use_1
 
     output:
@@ -112,13 +158,13 @@ process run_method_1 {
     """
     #!/usr/bin/env /usr/local/bin/Rscript
     source("${baseDir}/bin/method1_function.R")
-    pro_file <- "${pro_file_use_1}"
-    rna_file <- "${rna_file_use_1}"
+    d1_file <- "${d1_file_use_1}"
+    d2_file <- "${d2_file_use_1}"
     sample_file <- "${sample_file_use_1}"
     gene_file <- "${baseDir}/bin/genes.tsv"
     out_dir <- "method1_folder"
     clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
-    run_2b(pro_file, rna_file, sample_file, gene_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
+    run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
 
     """
 }
@@ -128,6 +174,8 @@ process run_method_2 {
 
     tag "run_method_2"
 
+    //cpus ${threads}
+
     echo true
 
     container "proteomics/cosmo:latest"
@@ -135,8 +183,8 @@ process run_method_2 {
     publishDir "${out_dir}/method2_folder/", mode: "copy", overwrite: true
 
     input:
-    file pro_file_use_2
-    file rna_file_use_2
+    file d1_file_use_2
+    file d2_file_use_2
     file sample_file_use_2
 
     output:
@@ -145,8 +193,8 @@ process run_method_2 {
     script:
     """
     python ${baseDir}/bin/method2_function.py \
-        -pro ${pro_file_use_2} \
-        -rna ${rna_file_use_2} \
+        -pro ${d1_file_use_2} \
+        -rna ${d2_file_use_2} \
         -s ${sample_file_use_2} \
         -l ${sample_label} \
         -o method2_folder
@@ -158,6 +206,8 @@ process run_method_2 {
 process combine_methods {
 
     tag "combine_methods"
+
+    //cpus ${threads}
 
     echo true
 
