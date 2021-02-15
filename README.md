@@ -77,9 +77,9 @@ The input for parameter `--sample_file` is the sample annotation file and an exa
 
 Below is an example run COSMO:
 ```sh
-nextflow run cosmo.nf --d1_file example_data/for_2b/Testing_1/test_pro.tsv \
-    --d2_file example_data/for_2b/Testing_1/test_rna.tsv \
-    --cli_file example_data/for_2b/Testing_1/test_cli.tsv \
+nextflow run cosmo.nf --d1_file example_data/test_pro.tsv \
+    --d2_file example_data/test_rna.tsv \
+    --cli_file example_data/test_cli.tsv \
     --cli_attribute "gender,msi" \
     --out_dir output
 ```
