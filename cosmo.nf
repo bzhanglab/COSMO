@@ -121,7 +121,7 @@ process pre_process {
     script:
     """
     #!/usr/bin/env /usr/local/bin/Rscript
-    source("${baseDir}/bin/tools.R")
+    source("/opt/cosmo/tools.R")
     d1_file <- "${d1_file}"
     d2_file <- "${d2_file}"
     sample_file <- "${sample_file}"
@@ -157,7 +157,7 @@ process run_method_1 {
     script:
     """
     #!/usr/bin/env /usr/local/bin/Rscript
-    source("${baseDir}/bin/method1_function.R")
+    source("/opt/cosmo/method1_function.R")
     d1_file <- "${d1_file_use_1}"
     d2_file <- "${d2_file_use_1}"
     sample_file <- "${sample_file_use_1}"
@@ -192,7 +192,7 @@ process run_method_2 {
 
     script:
     """
-    python ${baseDir}/bin/method2_function.py \
+    python /opt/cosmo/method2_function.py \
         -pro ${d1_file_use_2} \
         -rna ${d2_file_use_2} \
         -s ${sample_file_use_2} \
@@ -226,8 +226,8 @@ process combine_methods {
     script:
     """
     #!/usr/bin/env /usr/local/bin/Rscript
-    source("${baseDir}/bin/method1_function.R")
-    source("${baseDir}/bin/combine_methods.R")
+    source("/opt/cosmo/method1_function.R")
+    source("/opt/cosmo/combine_methods.R")
     method1_folder <- "${method1_out_folder}"
     method2_folder <- "${method2_out_folder}"
     sample_annotation_file <- "${sample_file}"
