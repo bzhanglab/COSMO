@@ -15,6 +15,9 @@ format_input_data = function(pro_file,rna_file,cli_file,out_dir="./"){
     sam <- sam[sam$sample %in% sam_all,]
     cat("Use samples:",length(sam_all),"\n")
     
+    proteome <- proteome[,sam$sample]
+    rnaseq <- rnaseq[,sam$sample]
+    
     ## remove rows with all NA
     rows_all_na <- apply(proteome, 1, function(x){all(is.na(x))})
     if(sum(rows_all_na) > 0){
