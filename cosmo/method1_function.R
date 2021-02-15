@@ -964,7 +964,6 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
           proshift <- c(proshift, chain[2:(lenchain-1)])
           if (distfront > distback) {
             cat('Warning: distance indicates Data1 ', chain[1], ' shifting but prediction results indicate Data2 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
-            heatmap(rankdist[chain, chain], Rowv=NA, Colv=NA)
           }
           
         } else if (rna_shift < pro_shift) {   # supposedly distfront > distback
@@ -974,7 +973,6 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
           rnashift <- c(rnashift, chain[2:(lenchain-1)])
           if (distfront < distback){
             cat('Warning: distance indicates Data2 ', chain[lenchain], ' duplication but prediction results indicate Data1 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
-            heatmap(rankdist[chain, chain], Rowv=NA, Colv=NA)
           }
         }
       }

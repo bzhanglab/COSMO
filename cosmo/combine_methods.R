@@ -7,7 +7,7 @@ combine_methods=function(method1_folder, method2_folder,
   
   #sj_intermediate_file <- paste(method1_folder,"/intermediate.csv", sep = "")
   sj_intermediate_file <- paste(method1_folder,"/clinical_attributes_pred.tsv", sep = "")
-  sj_correlation_file <- paste(method1_folder,"/correlation.csv", sep = "")
+  sj_correlation_file <- paste(method1_folder,"/sample_correlation.csv", sep = "")
   modelA_result_file <- paste(method2_folder,"/test_ModelA_result.csv", sep = "")
   modelB_result_file <- paste(method2_folder,"/test_ModelB_result.csv", sep = "")
   
@@ -30,46 +30,41 @@ combine_methods=function(method1_folder, method2_folder,
   fmlerank <- rankbyCol(rankdist)
   
   matcher <- stableMarriage(malerank, fmlerank)
-  #rnamatch <- as.numeric(sub('PRO_', '', matcher$malematch))
-  #promatch <- as.numeric(sub('RNA_', '', matcher$fmlematch))
-  rnamatch <- c()
-  promatch <- c()
+  d1match <- c()
+  d2match <- c()
   for(i in 1:length(matcher$malematch)){
-    rnamatch[i] <- which(rownames(corsample) == matcher$malematch[i])
+    d1match[i] <- which(rownames(corsample) == matcher$malematch[i])
   }
   
   for(i in 1:length(matcher$fmlematch)){
-    promatch[i] <- which(rownames(corsample) == matcher$fmlematch[i])
+    d2match[i] <- which(rownames(corsample) == matcher$fmlematch[i])
   }
   
   total_samples <- nrow(sjcli)
-  #nonmatch <- which(1:100 != rnamatch)
-  nonmatch <- which(1:total_samples != rnamatch)
+  #nonmatch <- which(1:100 != d1match)
+  nonmatch <- which(1:total_samples != d1match)
   length(nonmatch)
   
   
   ### get pairdist for shifting chain identification later
-  #pairdist <- data.frame(rna=1:100, pro=rnamatch)
-  pairdist <- data.frame(rna=1:total_samples, pro=rnamatch)
-  pairdist$rnarank <- apply(pairdist, 1, function(x) malerank[x['rna'], x['pro']])
-  pairdist$prorank <- apply(pairdist, 1, function(x) fmlerank[x['rna'], x['pro']])
-  pairdist$distance <- pairdist$rnarank + pairdist$prorank
-  pairdist$softmax <- apply(pairdist, 1, function(x) rankdist[x['rna'], x['pro']])
+  #pairdist <- data.frame(rna=1:100, pro=d1match)
+  pairdist <- data.frame(d1=1:total_samples, d2=d1match)
+  pairdist$d1rank <- apply(pairdist, 1, function(x) malerank[x['d1'], x['d2']])
+  pairdist$d2rank <- apply(pairdist, 1, function(x) fmlerank[x['d1'], x['d2']])
+  pairdist$distance <- pairdist$d1rank + pairdist$d2rank
+  pairdist$correlation <- apply(pairdist, 1, function(x) corsample[x['d1'], x['d2']])
   
   
   ### Determine spurious match due to being left out (threshold is 5% of n)
-  #if (sum(1:100 == rnamatch & pairdist$distance >= 4) > 0){
-  if (sum(1:total_samples == rnamatch & pairdist$distance >= 4) > 0){
-    #spumatch <- pairdist$rna[1:100 == rnamatch & pairdist$distance >= 4]
-    spumatch <- pairdist$rna[1:total_samples == rnamatch & pairdist$distance >= 4]
+  #if (sum(1:100 == d1match & pairdist$distance >= 4) > 0){
+  spumatch <- which(1:total_samples == d1match & pairdist$distance >= max(2, total_samples/10))
+  if (length(spumatch) > 0){
     nonmatch <- c(nonmatch, spumatch)
-    cat('Spurious match:', paste(spumatch), '\n')
-    print(pairdist[spumatch,])
+    cat('  Spurious match:', paste(spumatch), '\n')
   }
-  cat('\n Number of Non-matching =', length(nonmatch), '\n\n')
+  cat('\n Total Number of Mismatched Samples =', length(nonmatch), '\n\n')
   
   
-  #traincli <- sjcli[, c('sample', 'gender', 'msi')]
   traincli <- sjcli[, c('sample', clinical_attributes)]
   
   ######### Prediction probability #########
@@ -110,8 +105,8 @@ combine_methods=function(method1_folder, method2_folder,
   
 
   # prediction probability
-  cli_attr_prob_names_pred_rna <- paste("r",clinical_attributes,"_prob",sep = "")
-  cli_attr_prob_names_pred_pro <- paste("p",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_d1 <- paste("d1",clinical_attributes,"_prob",sep = "")
+  cli_attr_prob_names_pred_d2 <- paste("d2",clinical_attributes,"_prob",sep = "")
   
   cli_attr_prob_names_pred_combine <- paste("pred_",clinical_attributes,sep = "")
   
@@ -120,24 +115,23 @@ combine_methods=function(method1_folder, method2_folder,
     # RNA
     #traincli$rgender_prob <- (sjcli$GenderByRNA + sentionrna$gender_prob) / 2
     #traincli$rmsi_prob <- (sjcli$MsiByRNA + sentionrna$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_rna[i]] <- ( sjcli[, cli_attr_prob_names_pred_rna[i]] + sentionrna[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    traincli[,cli_attr_prob_names_pred_d1[i]] <- ( sjcli[, cli_attr_prob_names_pred_d1[i]] + sentionrna[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
     # Protein
     #traincli$pgender_prob <- (sjcli$GenderByPRO + sentionpro$gender_prob) / 2
     #traincli$pmsi_prob <- (sjcli$MsiByPRO + sentionpro$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_pro[i]] <- ( sjcli[, cli_attr_prob_names_pred_pro[i]] + sentionpro[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    traincli[,cli_attr_prob_names_pred_d2[i]] <- ( sjcli[, cli_attr_prob_names_pred_d2[i]] + sentionpro[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
     # combine RNA and Protein
     #traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob) / 2
     #traincli$pred_msi <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_combine[i]] <- ( traincli[,cli_attr_prob_names_pred_rna[i]] + traincli[,cli_attr_prob_names_pred_pro[i]]) / 2.0
+    traincli[,cli_attr_prob_names_pred_combine[i]] <- ( traincli[,cli_attr_prob_names_pred_d1[i]] + traincli[,cli_attr_prob_names_pred_d2[i]]) / 2.0
   }
   
   
   
   ########### Label Correction
-  #final_tab <- data.frame(sample=paste0('Testing_', 1:100), Clinical=1:100, RNAseq=1:100, Proteomics=1:100)
-  final_tab <- data.frame(sample=cli_data_use$sample, Clinical=1:total_samples, RNAseq=1:total_samples, Proteomics=1:total_samples)
+  final_tab <- data.frame(sample=cli_data_use$sample, Clinical=1:total_samples, Data1=1:total_samples, Data2=1:total_samples)
   
   
   cat('\n')
@@ -160,7 +154,6 @@ combine_methods=function(method1_folder, method2_folder,
     #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
     cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
     cli_suspect <- setdiff(cli_suspect, nonmatch)
-    traincli[cli_suspect, ]
   }else{
     cli_suspect <- c()
   }
@@ -217,8 +210,8 @@ combine_methods=function(method1_folder, method2_folder,
   swapped <- c()
   for (r in nonmatch){
     if (r %in% swapped)    next
-    p <- rnamatch[r]
-    if (rnamatch[p] == r && rnamatch[r] != r) {
+    p <- d1match[r]
+    if (d1match[p] == r && d1match[r] != r) {
       if (malerank[r,p] + fmlerank[r,p] + malerank[p,r] + fmlerank[p,r] > 8){
         cat(sprintf('Spurious Pair: %d <--> %d, distance = %f \n', r, p, malerank[r,p] + fmlerank[r,p] + malerank[p,r] + fmlerank[p,r]))
         next
@@ -236,20 +229,20 @@ combine_methods=function(method1_folder, method2_folder,
       pro_swap <- 0
       rna_swap <- 0
       for(i in 1:length(clinical_attributes)){
-        subset <- traincli[c(r,p), c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        subset <- traincli[c(r,p), c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_d1[i], cli_attr_prob_names_pred_d2[i])]
         pro_swap <- pro_swap + abs(subset[1,1]-subset[1,2]) + abs(subset[1,1]-subset[2,3]) + abs(subset[2,1]-subset[2,2]) + abs(subset[2,1]-subset[1,3])
         rna_swap <- rna_swap + abs(subset[1,1]-subset[2,2]) + abs(subset[1,1]-subset[1,3]) + abs(subset[2,1]-subset[1,2]) + abs(subset[2,1]-subset[2,3])
       }
       
       if (pro_swap < rna_swap){
-        cat(sprintf('Proteome swap: %d <--> %d (RNA: %.3f vs PRO: %.3f) \n', r, p, rna_swap, pro_swap))
-        final_tab[r, 'Proteomics'] <- p
-        final_tab[p, 'Proteomics'] <- r
+        cat(sprintf('Data2 swap: %d <--> %d (d1_error: %.3f vs d2_error: %.3f) \n', r, p, rna_swap, pro_swap))
+        final_tab[r, 'Data2'] <- p
+        final_tab[p, 'Data2'] <- r
         proswap <- c(proswap, r, p)
       } else {
-        cat(sprintf('RNA swap: %d <--> %d (RNA: %.3f vs PRO: %.3f) \n', r, p, rna_swap, pro_swap))
-        final_tab[r, 'RNAseq'] <- p
-        final_tab[p, 'RNAseq'] <- r
+        cat(sprintf('Data1 swap: %d <--> %d (d1_error: %.3f vs d2_error: %.3f) \n', r, p, rna_swap, pro_swap))
+        final_tab[r, 'Data1'] <- p
+        final_tab[p, 'Data1'] <- r
         rnaswap <- c(rnaswap, r, p)
       }
     }
@@ -278,7 +271,7 @@ combine_methods=function(method1_folder, method2_folder,
       chain <- c(start)
       cnext <- start
       while (!(cnext %in% lose_ends)) {
-        cnext <- promatch[cnext]
+        cnext <- d2match[cnext]
         chain <- c(chain, cnext)
       }
       
@@ -316,7 +309,7 @@ combine_methods=function(method1_folder, method2_folder,
       pro_shift <- 0
       lenchain <- length(chain)
       for(i in 1:length(clinical_attributes)){
-        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_d1[i], cli_attr_prob_names_pred_d2[i])]
         rna_shift <- rna_shift + sum(abs(subset[1:(lenchain-2), 1] - subset[2:(lenchain-1), 2])) + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 3])) + abs(subset[1,1] - subset[1,2])
         pro_shift <- pro_shift + sum(abs(subset[2:lenchain, 1] - subset[2:lenchain, 2])) + sum(abs(subset[3:lenchain, 1] - subset[2:(lenchain-1), 3])) + abs(subset[lenchain,1] - subset[lenchain,3])
       }
@@ -329,7 +322,7 @@ combine_methods=function(method1_folder, method2_folder,
       
       mean_true <- c()
       for(i in 1:length(clinical_attributes)){
-        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_rna[i], cli_attr_prob_names_pred_pro[i])]
+        subset <- traincli[chain, c(cli_attr_prob_names_true[i], cli_attr_prob_names_pred_d1[i], cli_attr_prob_names_pred_d2[i])]
         mean_true[i] <- mean(subset[, cli_attr_prob_names_true[i]][2:(lenchain-1)]) == 0 || mean(subset[, cli_attr_prob_names_true[i]][2:(lenchain-1)]) == 1
       }
       
@@ -337,40 +330,29 @@ combine_methods=function(method1_folder, method2_folder,
       #if ((mean(subset$gender_prob[2:(lenchain-1)]) == 0 || mean(subset$gender_prob[2:(lenchain-1)]) == 1) && (mean(subset$msi_prob[2:(lenchain-1)]) == 0 || mean(subset$msi_prob[2:(lenchain-1)]) == 1)) {
       if(all(mean_true)){
         if (distback > distfront) {
-          cat('Same attr, so Proteome shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift))
-          cat(sprintf('Distance: RNA_%d <-> PRO_%d = %.4f \t RNA_%d <-> PRO_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'Proteomics'] <- chain[3:length(chain)]
+          cat('Same attr, so Data2 shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
+          cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
+          final_tab[chain[-c(1,length(chain))], 'Data2'] <- chain[3:length(chain)]
           proshift <- c(proshift, chain[2:(lenchain-1)])
         } else {
-          cat('Same attr, so RNA shift: ', chain[1], paste(chain[1:(length(chain)-2)], collapse = ' '), chain[length(chain)], sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift))
-          cat(sprintf('Distance: RNA_%d <-> PRO_%d = %.4f \t RNA_%d <-> PRO_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'RNAseq'] <- chain[1:(length(chain)-2)]
+          cat('Same attr, so Data1 shift: ', chain[1], paste(chain[1:(length(chain)-2)], collapse = ' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
+          cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
+          final_tab[chain[-c(1,length(chain))], 'Data1'] <- chain[1:(length(chain)-2)]
           rnashift <- c(rnashift, chain[2:(lenchain-1)])
         }
       } else{
         if (pro_shift < rna_shift) {          # supposedly distfront < distback
-          cat('Proteome shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift))
-          cat(sprintf('Distance: RNA_%d <-> PRO_%d = %.4f \t RNA_%d <-> PRO_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'Proteomics'] <- chain[3:length(chain)]
+          cat('Data2 shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
+          cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
+          final_tab[chain[-c(1,length(chain))], 'Data2'] <- chain[3:length(chain)]
           proshift <- c(proshift, chain[2:(lenchain-1)])
-          if (distfront > distback) {
-            cat('Error: distance indicates RNA_', chain[1], ' duplication but prediction results indicate Proteome shifting', sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift), '\n')
-            pdf(paste(out_dir,"/",out_prefix,"_pro_shifting.pdf",sep = ""),width = 4.5,height = 4.5)
-            heatmap(rankdist[chain, chain], Rowv=NA, Colv=NA)
-            dev.off()
-          }
           
         } else if (rna_shift < pro_shift) {   # supposedly distfront > distback
-          cat('RNA shift: ', chain[1], paste(chain[1:(length(chain)-2)], collapse = ' '), chain[length(chain)], sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift))
-          cat(sprintf('Distance: RNA_%d <-> PRO_%d = %.4f \t RNA_%d <-> PRO_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'RNAseq'] <- chain[1:(length(chain)-2)]
+          cat('Data1 shift: ', chain[1], paste(chain[1:(length(chain)-2)], collapse = ' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
+          cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
+          final_tab[chain[-c(1,length(chain))], 'Data1'] <- chain[1:(length(chain)-2)]
           rnashift <- c(rnashift, chain[2:(lenchain-1)])
-          if (distfront < distback){
-            cat('Error: distance indicates PRO_', chain[lenchain], ' duplication but prediction results indicate RNAseq shifting', sprintf('(RNA: %.3f vs PRO: %.3f) \n', rna_shift, pro_shift), '\n')
-            pdf(paste(out_dir,"/",out_prefix,"_rna_shifting.pdf",sep = ""),width = 4.5,height = 4.5)
-            heatmap(rankdist[chain, chain], Rowv=NA, Colv=NA)
-            dev.off()
-          }
+
         }
       }
       cat('\n')
