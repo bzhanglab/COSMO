@@ -8,7 +8,7 @@ Multi-omics Enabled Sample Mislabeling Correction
 
 ## Installation
 
-1. Download neoflow:
+1. Download COSMO:
 
 ```sh
 git clone https://github.com/bzhanglab/cosmo
