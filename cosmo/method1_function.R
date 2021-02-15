@@ -606,7 +606,7 @@ flagClinicalSwap <- function(traincli, nonmatch, clinical_attributes) {
   
   # true probability
   cli_attr_prob_names_true <- paste0(clinical_attributes, "_prob")
-  cli_attr_prob_names_pred_combine <- paste0("pred_", clinical_attributes,)
+  cli_attr_prob_names_pred_combine <- paste0("pred_", clinical_attributes)
   
   
   clinic_swap <- c()
