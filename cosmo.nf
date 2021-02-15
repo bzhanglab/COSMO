@@ -161,7 +161,7 @@ process run_method_1 {
     d1_file <- "${d1_file_use_1}"
     d2_file <- "${d2_file_use_1}"
     sample_file <- "${sample_file_use_1}"
-    gene_file <- "${baseDir}/bin/genes.tsv"
+    gene_file <- "/opt/cosmo/genes.tsv"
     out_dir <- "method1_folder"
     clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
     run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
