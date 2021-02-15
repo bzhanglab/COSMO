@@ -59,7 +59,7 @@ The formats for both datasets (`--d1_file`, `--d2_file`) are the same. An exampl
 | AAK1      | 1.0459    | 2.5435    | 1.7449    | NA        | 1.0653    | 0.9855    | 2.0395    | 1.1588    | NA         | NA     |
 
 
-The input for parameter `--sample_file` is the sample annotation file and an example is shown below:
+The input for parameter `--cli_file` is the sample annotation file and an example is shown below:
 
 
 | sample    | age | gender | stage | colon_rectum | msi         | tumor_normal |
