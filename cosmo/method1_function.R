@@ -751,7 +751,7 @@ correctClinicalSwapping <- function(traincli, final_tab, nonmatch, clinical_attr
       final_tab$Clinical[high_suspect] <- -1
     }
     #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.35)
-    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.35)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
     cli_suspect <- setdiff(cli_suspect, nonmatch)
   }else{
     cli_suspect <- c()
@@ -875,8 +875,8 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
     shiftdist <- shiftdist[order(-shiftdist$distance), ]
     print(shiftdist)
     
-    lose_starts <- shiftdist$rna[shiftdist$distance > 3]
-    lose_ends   <- shiftdist$pro[shiftdist$distance > 3]
+    lose_starts <- shiftdist$d1[shiftdist$distance > 3]
+    lose_ends   <- shiftdist$d2[shiftdist$distance > 3]
     
     
     ### chain identification
@@ -890,8 +890,8 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
         chain <- c(chain, cnext)
       }
       
-      chain <- c(chain, which.min(rankdist[, chain[length(chain)]]))
-      chain <- c(which.min(rankdist[chain[1],]), chain)
+      chain <- c(chain, which.max(rankdist[, chain[length(chain)]]))
+      chain <- c(which.max(rankdist[chain[1],]), chain)
       
       chains[[i]] <- chain
       i <- i + 1
@@ -960,7 +960,7 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
         if (pro_shift < rna_shift) {          # supposedly distfront < distback
           cat('Data2 shift: ', chain[1], paste(chain[3:lenchain], collapse=' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
           cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'Proteomics'] <- chain[3:length(chain)]
+          final_tab[chain[-c(1,length(chain))], 'Data2'] <- chain[3:length(chain)]
           proshift <- c(proshift, chain[2:(lenchain-1)])
           if (distfront > distback) {
             cat('Warning: distance indicates Data1 ', chain[1], ' shifting but prediction results indicate Data2 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
@@ -969,7 +969,7 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
         } else if (rna_shift < pro_shift) {   # supposedly distfront > distback
           cat('Data1 shift: ', chain[1], paste(chain[1:(length(chain)-2)], collapse = ' '), chain[length(chain)], sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift))
           cat(sprintf('Distance: d1_%d <-> d2_%d = %.4f \t d1_%d <-> d2_%d = %.4f \n', chain[2], chain[1], distfront, chain[length(chain)], chain[length(chain)-1], distback))
-          final_tab[chain[-c(1,length(chain))], 'RNAseq'] <- chain[1:(length(chain)-2)]
+          final_tab[chain[-c(1,length(chain))], 'Data1'] <- chain[1:(length(chain)-2)]
           rnashift <- c(rnashift, chain[2:(lenchain-1)])
           if (distfront < distback){
             cat('Warning: distance indicates Data2 ', chain[lenchain], ' duplication but prediction results indicate Data1 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
