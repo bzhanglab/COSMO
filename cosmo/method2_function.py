@@ -100,24 +100,24 @@ def ensemble(model, X, Y, Y_pred):
 
     return Y_pred
 
-def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./", prefix="test"):
+def run(d1_file:str, d2_file:str, sample_file:str, sample_labels, out_dir="./", prefix="test"):
 
-    print("Processing file: %s and %s\n" % (pro_file, rna_file) )
+    print("Processing file: %s and %s\n" % (d1_file, d2_file) )
 
-    test_pro = pd.read_csv(pro_file, sep='\t')
-    test_pro = test_pro.T.fillna(0)
+    test_d1 = pd.read_csv(d1_file, sep='\t')
+    test_d1 = test_d1.T.fillna(0)
 
-    test_rna = pd.read_csv(rna_file, sep='\t')
-    test_rna = test_rna.T.fillna(0)
+    test_d2 = pd.read_csv(d2_file, sep='\t')
+    test_d2 = test_d2.T.fillna(0)
 
     test_cli = pd.read_csv(sample_file, sep='\t')
 
     # to be used features/genes, remove highly correlated ones
-    corr_matrix = test_pro.loc[:, test_pro.columns[test_pro.nunique() > 1].tolist()].corr().abs()
+    corr_matrix = test_d1.loc[:, test_d1.columns[test_d1.nunique() > 1].tolist()].corr().abs()
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
     use_pro = [column for column in upper.columns if any(upper[column] <= 0.9)]
 
-    corr_matrix = test_rna.loc[:, test_rna.columns[test_rna.nunique() > 1].tolist()].corr().abs()
+    corr_matrix = test_d2.loc[:, test_d2.columns[test_d2.nunique() > 1].tolist()].corr().abs()
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
     use_rna = [column for column in upper.columns if any(upper[column] <= 0.9)]
 
@@ -158,10 +158,10 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
 
     ##Protein Build Model A
     pro_labels = sample_labels # ["gender", "msi"]
-    test_pro_data = test_pro.merge(test_cli, left_index=True, right_on="sample").set_index("sample")
+    test_d1_data = test_d1.merge(test_cli, left_index=True, right_on="sample").set_index("sample")
 
     pred_pro = {}
-    X = test_pro_data[use_pro].values
+    X = test_d1_data[use_pro].values
     scaler = StandardScaler()
     scaler.fit(X)
     X = scaler.transform(X)
@@ -169,8 +169,8 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
     les = {}
     for l in pro_labels:
         le = preprocessing.LabelEncoder()
-        le.fit(test_pro_data[l].values)
-        Y = le.transform(test_pro_data[l].values)
+        le.fit(test_d1_data[l].values)
+        Y = le.transform(test_d1_data[l].values)
         les[l] = le
 
         pred_res = np.zeros((X.shape[0], rand_times))
@@ -180,7 +180,7 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
     del X, Y, scaler
     gc.collect()
 
-    modelA_dist = pd.DataFrame(index=test_pro_data.index)
+    modelA_dist = pd.DataFrame(index=test_d1_data.index)
     for l in pro_labels:
         modelA_dist[l + "_dist"] = np.absolute(np.sum(pred_pro[l], axis=1) / rand_times
                                                - les[l].transform(test_cli[l]))
@@ -191,10 +191,10 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
     rna_labels = sample_labels #["gender", "msi"
                   #               , "stage", "colon_rectum"
                   #]
-    test_rna_data = test_rna.merge(test_cli, left_index=True, right_on="sample").set_index("sample")
+    test_d2_data = test_d2.merge(test_cli, left_index=True, right_on="sample").set_index("sample")
 
     pred_rna = {}
-    X = test_rna_data[use_rna].values
+    X = test_d2_data[use_rna].values
     scaler = StandardScaler()
     scaler.fit(X)
     X = scaler.transform(X)
@@ -202,8 +202,8 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
     les = {}
     for l in rna_labels:
         le = preprocessing.LabelEncoder()
-        le.fit(test_rna_data[l].values)
-        Y = le.transform(test_rna_data[l].values)
+        le.fit(test_d2_data[l].values)
+        Y = le.transform(test_d2_data[l].values)
         les[l] = le
 
         pred_res = np.zeros((X.shape[0], rand_times))
@@ -213,7 +213,7 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
     del X, Y, scaler
     gc.collect()
 
-    modelB_dist = pd.DataFrame(index=test_rna_data.index)
+    modelB_dist = pd.DataFrame(index=test_d2_data.index)
     for l in rna_labels:
         modelB_dist[l + "_prob"] = np.sum(pred_rna[l], axis=1) / rand_times
         modelB_dist[l + "_dist"] = np.absolute(np.sum(pred_rna[l], axis=1) / rand_times -
@@ -224,10 +224,10 @@ def run(pro_file:str, rna_file:str, sample_file:str, sample_labels, out_dir="./"
 
 def main():
     parser = argparse.ArgumentParser(description='COSMO')
-    parser.add_argument('-pro', '--protein', default=None, type=str, required=True,
-                        help="Protein expression data")
-    parser.add_argument('-rna', '--rna', default=None, type=str,
-                        help="RNA expression data")
+    parser.add_argument('-d1', '--dataset1', default=None, type=str, required=True,
+                        help="Quantification data at gene level, for example, proteomics data")
+    parser.add_argument('-d2', '--dataset2', default=None, type=str,
+                        help="Quantification data at gene level, for example, RNA-Seq data")
     parser.add_argument('-s', '--sample_file', default=None, type=str, required=True,
                        help="RNA expression data")
     parser.add_argument('-l', '--sample_label', default=None, type=str,
@@ -239,8 +239,8 @@ def main():
 
     args = parser.parse_args(sys.argv[1:len(sys.argv)])
 
-    pro_file = args.protein
-    rna_file = args.rna
+    d1_file = args.dataset1
+    d2_file = args.dataset2
     sample_file = args.sample_file
     sample_label = args.sample_label.split(",")
     out_dir = args.out_dir
@@ -249,7 +249,7 @@ def main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    run(pro_file=pro_file, rna_file=rna_file, sample_file=sample_file, sample_labels=sample_label, out_dir=out_dir)
+    run(d1_file=d1_file, d2_file=d2_file, sample_file=sample_file, sample_labels=sample_label, out_dir=out_dir)
 
 if __name__=="__main__":
     main()
