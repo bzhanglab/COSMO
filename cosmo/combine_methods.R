@@ -3,7 +3,7 @@ library(dplyr)
 combine_methods=function(method1_folder, method2_folder, 
                          sample_annotation_file,
                          clinical_attributes = c("gender"), 
-                         out_dir = "./", prefix = "test"){
+                         out_dir = "./", prefix = "cosmo"){
   
   #sj_intermediate_file <- paste(method1_folder,"/intermediate.csv", sep = "")
   sj_intermediate_file <- paste(method1_folder,"/clinical_attributes_pred.tsv", sep = "")
@@ -122,7 +122,7 @@ combine_methods=function(method1_folder, method2_folder,
   final_tab <- correctOmicsShifting(traincli, final_tab, dup_shift, corsample, d1match, d2match, swapped, pairdist, clinical_attributes)
   
   
-  out_file <- paste(out_dir,"/",out_prefix,"_final_result.tsv",sep = "")
+  out_file <- paste(out_dir, "/", prefix, "_final_result.tsv", sep = "")
   write.table(final_tab, out_file, col.names=TRUE, row.names=FALSE, sep='\t')
 }
 
