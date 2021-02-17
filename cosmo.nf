@@ -189,8 +189,8 @@ process run_method_2 {
     script:
     """
     python /opt/cosmo/method2_function.py \
-        -pro ${d1_file_use_2} \
-        -rna ${d2_file_use_2} \
+        -d1 ${d1_file_use_2} \
+        -d2 ${d2_file_use_2} \
         -s ${sample_file_use_2} \
         -l ${sample_label} \
         -o method2_folder
