@@ -963,7 +963,7 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
           final_tab[chain[-c(1,length(chain))], 'Data2'] <- chain[3:length(chain)]
           proshift <- c(proshift, chain[2:(lenchain-1)])
           if (distfront > distback) {
-            cat('Warning: distance indicates Data1 ', chain[1], ' shifting but prediction results indicate Data2 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
+            cat('Warning: distance indicates Data1_', chain[1], ' duplication but prediction results indicate Data2 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
           }
           
         } else if (rna_shift < pro_shift) {   # supposedly distfront > distback
@@ -972,7 +972,7 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
           final_tab[chain[-c(1,length(chain))], 'Data1'] <- chain[1:(length(chain)-2)]
           rnashift <- c(rnashift, chain[2:(lenchain-1)])
           if (distfront < distback){
-            cat('Warning: distance indicates Data2 ', chain[lenchain], ' duplication but prediction results indicate Data1 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
+            cat('Warning: distance indicates Data2_', chain[lenchain], ' duplication but prediction results indicate Data1 shifting', sprintf('(d1_error: %.3f vs d2_error: %.3f) \n', rna_shift, pro_shift), '\n')
           }
         }
       }

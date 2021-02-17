@@ -79,6 +79,7 @@ combine_methods=function(method1_folder, method2_folder,
   for(i in 1:length(clinical_attributes)){
     #cli_attr <- clinical_attributes[i]
     cat("clinical attributes: ", clinical_attributes[i], "\n")
+    traincli[,clinical_attributes[i]] <- as.factor(traincli[,clinical_attributes[i]])
     traincli[,cli_attr_prob_names_true[i]] <- apply(traincli, 1, function(x) if (x[clinical_attributes[i]] == levels(traincli[,clinical_attributes[i]])[1]) 0 else 1)
   }
   
