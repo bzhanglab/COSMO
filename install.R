@@ -2,7 +2,7 @@
 #    install.packages("BiocManager")
 #install.packages("remotes")
 #BiocManager::install(version = "3.9",ask=FALSE)
-BiocManager::install(version="3.9", update=TRUE, ask=FALSE)
+#BiocManager::install(version="3.9", update=TRUE, ask=FALSE)
 install.packages("missForest")
 BiocManager::install("biomaRt")
 install.packages("glmnet")
