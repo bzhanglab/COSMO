@@ -34,8 +34,6 @@ nextflow run cosmo.nf
  Arguments:
    --d1_file               Dataset with quantification data at gene level.
    --d2_file               Dataset with quantification data at gene level.
-   --d1_type               The type for dataset d1. This is used to label the dataset in the output files.
-   --d2_type               The type for dataset d2. This is used to label the dataset in the output files.
    --cli_file              Sample annotation data.
    --cli_attribute         Sample attribute(s) for prediction. Multiple attributes
                            must be separated by ",".

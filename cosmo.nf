@@ -3,8 +3,8 @@
 params.help          = false 
 params.d1_file       = "-"
 params.d2_file       = "-"
-params.d1_type       = "-"
-params.d2_type       = "-"
+//params.d1_type       = "-"
+//params.d2_type       = "-"
 params.cli_file      = "-"
 params.cli_attribute = "-"
 params.threads       = 4
@@ -23,8 +23,6 @@ def helpMessage() {
     Arguments:
       --d1_file               Dataset with quantification data at gene level.
       --d2_file               Dataset with quantification data at gene level.
-      --d1_type               The type for dataset d1. This is used to label the dataset in the output files.
-      --d2_type               The type for dataset d2. This is used to label the dataset in the output files.
       --cli_file              Sample annotation data.
       --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
                               must be separated by ",".
@@ -45,8 +43,6 @@ if (params.help){
 
 d1_file     = file(params.d1_file)
 d2_file     = file(params.d2_file)
-d1_type     = params.d1_type
-d2_type     = file(params.d2_type)
 sample_file = file(params.cli_file)
 sample_label= params.cli_attribute
 out_dir     = file(params.out_dir)
