@@ -14,8 +14,8 @@ combine_methods=function(method1_folder, method2_folder,
   cli_data_file <- sample_annotation_file
   cli_data <- read.delim(cli_data_file,stringsAsFactors = FALSE)
   
-  sentionpro <- read.table(modelA_result_file, sep=',', header=TRUE)
-  sentionrna <- read.table(modelB_result_file, sep=',', header=TRUE)
+  sention_d1 <- read.table(modelA_result_file, sep=',', header=TRUE)
+  sention_d2 <- read.table(modelB_result_file, sep=',', header=TRUE)
   
   sjcli <- read.table(sj_intermediate_file, header=TRUE, sep = "\t")
   corsample <- read.table(sj_correlation_file, sep=',', header=TRUE, row.names=1)
@@ -66,13 +66,7 @@ combine_methods=function(method1_folder, method2_folder,
   ######### Prediction probability #########
   cli_data_use <- cli_data %>% filter(sample %in% traincli$sample)
   cli_data_use <- cli_data_use[match(traincli$sample, cli_data_use$sample),]
-  
-  #traincli$gender_prob <- apply(traincli, 1, function(x) if (x['gender'] == 'Female') 0 else 1)
-  # true probability
-  # traincli$gender_prob <- apply(traincli, 1, function(x) if (x['gender'] == levels(traincli[,'gender'])[1]) 0 else 1)
-  #traincli$msi_prob <- apply(traincli, 1, function(x) if (x['msi'] == 'MSI-High') 0 else 1)
-  # true probability
-  # traincli$msi_prob <- apply(traincli, 1, function(x) if (x['msi'] == levels(traincli[,'msi'])[1]) 0 else 1)
+
   
   # true probability
   cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
@@ -94,19 +88,13 @@ combine_methods=function(method1_folder, method2_folder,
   
   for(i in 1:length(clinical_attributes)){
     cat("clinical attributes: ",clinical_attributes[i],"\n")
-    # RNA
-    #traincli$rgender_prob <- (sjcli$GenderByRNA + sentionrna$gender_prob) / 2
-    #traincli$rmsi_prob <- (sjcli$MsiByRNA + sentionrna$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_d1[i]] <- ( sjcli[, cli_attr_prob_names_pred_d1[i]] + sentionrna[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    # Data_1
+    traincli[,cli_attr_prob_names_pred_d1[i]] <- ( sjcli[, cli_attr_prob_names_pred_d1[i]] + sention_d2[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
-    # Protein
-    #traincli$pgender_prob <- (sjcli$GenderByPRO + sentionpro$gender_prob) / 2
-    #traincli$pmsi_prob <- (sjcli$MsiByPRO + sentionpro$msi_prob) / 2
-    traincli[,cli_attr_prob_names_pred_d2[i]] <- ( sjcli[, cli_attr_prob_names_pred_d2[i]] + sentionpro[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
+    # Data_2
+    traincli[,cli_attr_prob_names_pred_d2[i]] <- ( sjcli[, cli_attr_prob_names_pred_d2[i]] + sention_d1[, paste(clinical_attributes[i],"_prob",sep = "")] ) / 2.0
     
-    # combine RNA and Protein
-    #traincli$pred_gender <- (traincli$rgender_prob + traincli$pgender_prob) / 2
-    #traincli$pred_msi <- (traincli$rmsi_prob + traincli$pmsi_prob) / 2
+    # combine Data_1 and Data_2
     traincli[,cli_attr_prob_names_pred_combine[i]] <- ( traincli[,cli_attr_prob_names_pred_d1[i]] + traincli[,cli_attr_prob_names_pred_d2[i]]) / 2.0
   }
   

@@ -93,6 +93,7 @@ run_2b <- function(d1_file, d2_file, anno_file, gene_file, out_dir="./",
   traincli <- clinic[, c('sample', clinical_attributes)]
   rownames(traincli) <- traincli$sample
   traincli <- traincli[common_samples, ]
+  rownames(traincli) <- 1:sample_n
   
   # true probability
   cli_attr_prob_names_true <- paste(clinical_attributes,"_prob",sep = "")
@@ -597,8 +598,7 @@ flagClinicalSwap <- function(traincli, nonmatch, clinical_attributes) {
     #high_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.7)
     high_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.7)
     (high_suspect <- setdiff(high_suspect, nonmatch))
-    #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.45)
-    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.5)
     (cli_suspect <- setdiff(cli_suspect, nonmatch))
   }else{
     cli_suspect <- c()
@@ -750,8 +750,7 @@ correctClinicalSwapping <- function(traincli, final_tab, nonmatch, clinical_attr
       cat('Highly suspected Clinical swap case:', paste(high_suspect), '\n')
       final_tab$Clinical[high_suspect] <- -1
     }
-    #cli_suspect <- which(abs(traincli$gender_prob - traincli$pred_gender) > 0.35)
-    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.45)
+    cli_suspect <- which(abs(traincli[,gender_prob] - traincli[,pred_gender]) > 0.55)
     cli_suspect <- setdiff(cli_suspect, nonmatch)
   }else{
     cli_suspect <- c()
