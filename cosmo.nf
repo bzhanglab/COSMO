@@ -1,18 +1,6 @@
 #!/usr/bin/env nextflow
 
-params.help          = false 
-params.d1_file       = "-"
-params.d2_file       = "-"
-//params.d1_type       = "-"
-//params.d2_type       = "-"
-params.cli_file      = "-"
-params.cli_attribute = "-"
-params.threads       = 4
-params.out_dir       = "./output"
-
-
 /* Prints help when asked for and exits */
-
 def helpMessage() {
     log.info"""
     =========================================
@@ -26,82 +14,37 @@ def helpMessage() {
       --cli_file              Sample annotation data.
       --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
                               must be separated by ",".
-      --out_dir               Output folder, default is "./output".
-      --threads               The number of threads.
+      --outdir                Output folder, default is "results".
       --help                  Print help message.
     """.stripIndent()
 }
 
-
 // Show help emssage
-if (params.help){
+if (params.help) {
     helpMessage()
     exit 0
 }
 
+checkPathParamList = [params.d1_file, params.d2_file, params.cli_file]
+for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
+if (params.d1_file) { d1_file     = file(params.d1_file)  } else { exit 1, 'No file specified with --d1_file'  }
+if (params.d1_file) { d2_file     = file(params.d2_file)  } else { exit 1, 'No file specified with --d2_file'  }
+if (params.d1_file) { sample_file = file(params.cli_file) } else { exit 1, 'No file specified with --cli_file' }
 
-d1_file     = file(params.d1_file)
-d2_file     = file(params.d2_file)
-sample_file = file(params.cli_file)
-sample_label= params.cli_attribute
-out_dir     = file(params.out_dir)
-threads     = params.threads
+sample_label = params.cli_attribute
+outdir       = file(params.outdir)
 
+log.info "Sample attribute will be used: $sample_label \n"
 
-
-if("${d1_file}" == "-" || !d1_file.exists()){
-    if("${d1_file}" =~ /-$/){
-        println "There is no file provided to --d1_file!"
-        helpMessage()
-        exit 0
-    }else{    
-        exit 1, "\n${d1_file} does not exist!\n"
-    }
+if(!outdir.isDirectory()){
+    outdir = outdir.mkdirs()
+    println outdir ? "Create folder: $outdir!" : "Cannot create directory: $outdir!"
 }
-
-if("${d2_file}" == "-" || !d2_file.exists()){
-    if("${d2_file}" =~ /-$/){
-        println "There is no file provided to --d2_file!"
-        helpMessage()
-        exit 0
-    }else{    
-        exit 1, "\n${d2_file} does not exist!\n"
-    }
-}
-
-if("${sample_file}" == "-" || !sample_file.exists()){
-    if("${sample_file}" =~ /-$/){
-        println "There is no file provided to --sample_file!"
-        helpMessage()
-        exit 0
-    }else{    
-        exit 1, "\n${sample_file} does not exist!\n"
-    }
-}
-
-if(params.threads <= 0 || threads <= 0){
-    threads = 4
-}
-
-println "sample attribute will be used: $sample_label \n"
-
-if(!out_dir.isDirectory()){
-    out_dir_result = out_dir.mkdirs()
-    println out_dir_result ? "Create folder: $out_dir!" : "Cannot create directory: $myDir!"
-}
-
-
-
 
 process pre_process {
-    tag "preprocessing"
-    
-    echo true
-    
     container "proteomics/cosmo:latest"
-    
-    publishDir "${out_dir}/", mode: "copy", overwrite: true
+    publishDir "${outdir}/", mode: "copy", overwrite: true
 
     input:
     file d1_file
@@ -116,14 +59,14 @@ process pre_process {
 
     script:
     """
-    #!/usr/bin/env /usr/local/bin/Rscript
+    #!/usr/bin/env Rscript
     source("/opt/cosmo/tools.R")
     d1_file <- "${d1_file}"
     d2_file <- "${d2_file}"
     sample_file <- "${sample_file}"
-    out_dir <- "data_use"
-    dir.create(out_dir)
-    format_input_data(d1_file, d2_file, sample_file, out_dir = out_dir)
+    outdir <- "data_use"
+    dir.create(outdir)
+    format_input_data(d1_file, d2_file, sample_file, out_dir = outdir)
 
     """
 
@@ -131,16 +74,8 @@ process pre_process {
 
 
 process run_method_1 {
-
-    tag "run_method_1"
-
-    //cpus ${threads}
-
-    echo true
-
     container "proteomics/cosmo:latest"
-
-    publishDir "${out_dir}/method1_folder/", mode: "copy", overwrite: true
+    publishDir "${outdir}/method1_folder/", mode: "copy", overwrite: true
 
     input:
     file d1_file_use_1
@@ -152,31 +87,22 @@ process run_method_1 {
 
     script:
     """
-    #!/usr/bin/env /usr/local/bin/Rscript
+    #!/usr/bin/env Rscript
     source("/opt/cosmo/method1_function.R")
     d1_file <- "${d1_file_use_1}"
     d2_file <- "${d2_file_use_1}"
     sample_file <- "${sample_file_use_1}"
     gene_file <- "/opt/cosmo/genes.tsv"
-    out_dir <- "method1_folder"
+    outdir <- "method1_folder"
     clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
-    run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=out_dir, clinical_attributes=clinical_attributes)
-
+    run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=outdir, clinical_attributes=clinical_attributes)
     """
 }
 
 
 process run_method_2 {
-
-    tag "run_method_2"
-
-    //cpus ${threads}
-
-    echo true
-
     container "proteomics/cosmo:latest"
-
-    publishDir "${out_dir}/method2_folder/", mode: "copy", overwrite: true
+    publishDir "${outdir}/method2_folder/", mode: "copy", overwrite: true
 
     input:
     file d1_file_use_2
@@ -196,20 +122,11 @@ process run_method_2 {
         -o method2_folder
 
     """
-    
 }
 
 process combine_methods {
-
-    tag "combine_methods"
-
-    //cpus ${threads}
-
-    echo true
-
     container "proteomics/cosmo:latest"
-
-    publishDir "${out_dir}/final_res_folder/", mode: "copy", overwrite: true
+    publishDir "${outdir}/final_res_folder/", mode: "copy", overwrite: true
 
     input:
     file method1_out_folder
@@ -221,7 +138,7 @@ process combine_methods {
 
     script:
     """
-    #!/usr/bin/env /usr/local/bin/Rscript
+    #!/usr/bin/env Rscript
     source("/opt/cosmo/method1_function.R")
     source("/opt/cosmo/combine_methods.R")
     method1_folder <- "${method1_out_folder}"
@@ -233,8 +150,4 @@ process combine_methods {
                     clinical_attributes = clinical_attributes, 
                     out_dir = "./", prefix = "cosmo")
     """
-    
 }
-
-
-
