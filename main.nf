@@ -32,30 +32,23 @@ if (params.d1_file) { d1_file     = file(params.d1_file)  } else { exit 1, 'No f
 if (params.d1_file) { d2_file     = file(params.d2_file)  } else { exit 1, 'No file specified with --d2_file'  }
 if (params.d1_file) { sample_file = file(params.cli_file) } else { exit 1, 'No file specified with --cli_file' }
 
-sample_label = params.cli_attribute
 outdir       = file(params.outdir)
 
-log.info "Sample attribute will be used: $sample_label \n"
+log.info "Sample attribute will be used: $params.cli_attribute \n"
 
 if(!outdir.isDirectory()){
     outdir = outdir.mkdirs()
     println outdir ? "Create folder: $outdir!" : "Cannot create directory: $outdir!"
 }
 
-process pre_process {
-    container "proteomics/cosmo:latest"
-    publishDir "${outdir}/", mode: "copy", overwrite: true
-
+process PREPROCESS {
     input:
-    file d1_file
-    file d2_file
-    file sample_file
+    path(d1_file)
+    path(d2_file)
+    path(sample_file)
 
     output:
-    file "data_use/${d1_file.name}" into d1_file_use_1,d1_file_use_2
-    file "data_use/${d2_file.name}" into d2_file_use_1,d2_file_use_2
-    file "data_use/${sample_file.name}" into sample_file_use_1,sample_file_use_2
-
+    tuple path("data_use/${d1_file.name}"), path("data_use/${d2_file.name}"), path("data_use/${sample_file.name}")
 
     script:
     """
@@ -67,74 +60,58 @@ process pre_process {
     outdir <- "data_use"
     dir.create(outdir)
     format_input_data(d1_file, d2_file, sample_file, out_dir = outdir)
-
     """
-
 }
 
 
-process run_method_1 {
-    container "proteomics/cosmo:latest"
-    publishDir "${outdir}/method1_folder/", mode: "copy", overwrite: true
-
+process METHOD1 {
     input:
-    file d1_file_use_1
-    file d2_file_use_1
-    file sample_file_use_1
+    tuple path(d1_file), path(d2_file), path(samplefile)
 
     output:
-    file "method1_folder" into method1_out_folder
+    path("method1_folder")
 
     script:
     """
     #!/usr/bin/env Rscript
     source("/opt/cosmo/method1_function.R")
-    d1_file <- "${d1_file_use_1}"
-    d2_file <- "${d2_file_use_1}"
-    sample_file <- "${sample_file_use_1}"
+    d1_file <- "${d1_file}"
+    d2_file <- "${d2_file}"
+    sample_file <- "${samplefile}"
     gene_file <- "/opt/cosmo/genes.tsv"
     outdir <- "method1_folder"
-    clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
+    clinical_attributes <- unlist(strsplit(x="${params.cli_attribute}",split=","))
     run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=outdir, clinical_attributes=clinical_attributes)
     """
 }
 
 
-process run_method_2 {
-    container "proteomics/cosmo:latest"
-    publishDir "${outdir}/method2_folder/", mode: "copy", overwrite: true
-
+process METHOD2 {
     input:
-    file d1_file_use_2
-    file d2_file_use_2
-    file sample_file_use_2
+    tuple path(d1_file), path(d2_file), path(samplefile)
 
     output:
-    file "method2_folder" into method2_out_folder
+    path("method2_folder")
 
     script:
     """
     python /opt/cosmo/method2_function.py \
-        -d1 ${d1_file_use_2} \
-        -d2 ${d2_file_use_2} \
-        -s ${sample_file_use_2} \
-        -l ${sample_label} \
+        -d1 ${d1_file} \
+        -d2 ${d2_file} \
+        -s ${samplefile} \
+        -l ${params.cli_attribute} \
         -o method2_folder
-
     """
 }
 
-process combine_methods {
-    container "proteomics/cosmo:latest"
-    publishDir "${outdir}/final_res_folder/", mode: "copy", overwrite: true
-
+process COMBINE {
     input:
-    file method1_out_folder
-    file method2_out_folder
-    file sample_file
+    path(method1_out_folder)
+    path(method2_out_folder)
+    path(sample_file)
 
     output:
-    file "cosmo*" into final_res_folder
+    path("cosmo*")
 
     script:
     """
@@ -144,10 +121,17 @@ process combine_methods {
     method1_folder <- "${method1_out_folder}"
     method2_folder <- "${method2_out_folder}"
     sample_annotation_file <- "${sample_file}"
-    clinical_attributes <- unlist(strsplit(x="${sample_label}",split=","))
+    clinical_attributes <- unlist(strsplit(x="${params.cli_attribute}",split=","))
     combine_methods(method1_folder, method2_folder, 
                     sample_annotation_file,
                     clinical_attributes = clinical_attributes, 
                     out_dir = "./", prefix = "cosmo")
     """
+}
+
+workflow {
+    PREPROCESS(d1_file, d2_file, sample_file) 
+    | ( METHOD1 & METHOD2 )
+
+    COMBINE( METHOD1.out, METHOD2.out, sample_file)
 }
