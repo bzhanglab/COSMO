@@ -20,17 +20,20 @@
                 "d1_file": {
                     "type": "string",
                     "default": null,
-                    "fa_icon": "fas fa-file-csv"
+                    "fa_icon": "fas fa-file-csv",
+                    "mimetype": "text/tab-separated-values"
                 },
                 "d2_file": {
                     "type": "string",
                     "default": null,
-                    "fa_icon": "fas fa-file-csv"
+                    "fa_icon": "fas fa-file-csv",
+                    "mimetype": "text/tab-separated-values"
                 },
                 "cli_file": {
                     "type": "string",
                     "default": null,
-                    "fa_icon": "fas fa-file-csv"
+                    "fa_icon": "fas fa-file-csv",
+                    "mimetype": "text/tab-separated-values"
                 },
                 "cli_attribute": {
                     "type": "string",
@@ -40,7 +43,7 @@
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+                    "description": "The output directory where the results will be saved",
                     "fa_icon": "fas fa-folder-open"
                 }
             }
