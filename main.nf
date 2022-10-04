@@ -65,7 +65,7 @@ process METHOD1 {
 
     script:
     """
-    method1 \
+    cosmo one \
       --d1 $d1_file \
       --d2 $d2_file \
       --samples $samplefile \
@@ -105,17 +105,13 @@ process COMBINE {
 
     script:
     """
-    #!/usr/bin/env Rscript
-    source("/opt/cosmo/method1_function.R")
-    source("/opt/cosmo/combine_methods.R")
-    method1_folder <- "${method1_out_folder}"
-    method2_folder <- "${method2_out_folder}"
-    sample_annotation_file <- "${sample_file}"
-    clinical_attributes <- unlist(strsplit(x="${params.cli_attribute}",split=","))
-    combine_methods(method1_folder, method2_folder, 
-                    sample_annotation_file,
-                    clinical_attributes = clinical_attributes, 
-                    out_dir = "./", prefix = "cosmo")
+    cosmo combine 
+      --method-one-out $method1_out_folder 
+      --method-two-out $method2_out_folder 
+      --samples $sample_file \
+      --attributes ${params.cli_attribute} \
+      --prefix cosmo
+      --out .
     """
 }
 
@@ -123,8 +119,9 @@ workflow {
     genes = Channel.fromPath(params.genes)
 
     PREPROCESS(d1_file, d2_file, sample_file)
-    METHOD1(PREPROCESS.out, genes)
+
+    METHOD1(PREPROCESS.out, genes.first())
     METHOD2(PREPROCESS.out)
 
-    COMBINE( METHOD1.out, METHOD2.out, sample_file)
+    COMBINE(METHOD1.out, METHOD2.out, sample_file)
 }
