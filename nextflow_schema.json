@@ -14,30 +14,31 @@
                 "d1_file",
                 "d2_file",
                 "cli_file",
-                "outdir"
+                "outdir",
+                "cli_attribute"
             ],
             "properties": {
                 "d1_file": {
                     "type": "string",
-                    "default": null,
+                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
                     "mimetype": "text/tab-separated-values"
                 },
                 "d2_file": {
                     "type": "string",
-                    "default": null,
+                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
                     "mimetype": "text/tab-separated-values"
                 },
                 "cli_file": {
                     "type": "string",
-                    "default": null,
+                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
                     "mimetype": "text/tab-separated-values"
                 },
                 "cli_attribute": {
                     "type": "string",
-                    "default": null,
+                    "default": "None",
                     "fa_icon": "fas fa-book"
                 },
                 "outdir": {
@@ -45,6 +46,11 @@
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved",
                     "fa_icon": "fas fa-folder-open"
+                },
+                "genes": {
+                    "type": "string",
+                    "default": "assets/genes.human.tsv",
+                    "description": "Path to tsv listing with columns ensemble id, chr, symbol"
                 }
             }
         },
