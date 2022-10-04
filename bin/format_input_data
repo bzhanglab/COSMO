@@ -5,19 +5,17 @@ library(docopt)
 'Format input data.
 
 Usage:
-  format_input_data --d1 <file> --d2 <file> --samples <file> 
-  format_input_data --d1 <file> --d2 <file> --samples <file> --out <dir>
+  format_input_data --d1=<FILE> --d2=<FILE> --samples=<FILE> [--out=<DIR>]
   format_input_data (-h | --help)
-  format_input_data --version
+  format_input_data (-v | --version)
 
 Options:
   -h --help         Show this screen.
-  --version         Show version.
-  --d1 <FILE>       Path to d1 file.
-  --d2 <FILE>       Path to d2 file.
-  --samples <FILE>  Samples file
-  --out <DIR>       Output directory
-
+  -v --version         Show version.
+  -d --d1=<FILE>       Path to d1 file.
+  -e --d2=<FILE>       Path to d2 file.
+  -s --samples=<FILE>  Samples file
+  -s --out=<DIR>       Output directory [default: .]
 ' -> doc
 
 format_input_data <- function(pro_file,rna_file,cli_file,out_dir="./"){
