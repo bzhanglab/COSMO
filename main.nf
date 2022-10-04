@@ -42,6 +42,8 @@ if(!outdir.isDirectory()){
 }
 
 process PREPROCESS {
+    label 'process_low'
+
     input:
     path(d1_file)
     path(d2_file)
@@ -56,6 +58,8 @@ process PREPROCESS {
 
 
 process METHOD1 {
+    label 'process_medium'
+
     input:
     tuple path(d1_file), path(d2_file), path(samplefile)
     path(gene_tsv)
@@ -65,18 +69,21 @@ process METHOD1 {
 
     script:
     """
-    cosmo one \
-      --d1 $d1_file \
-      --d2 $d2_file \
-      --samples $samplefile \
-      --out results_method1 \
-      --genes $gene_tsv \
-      --attributes ${params.cli_attribute}
+    cosmo one \\
+      --d1 $d1_file \\
+      --d2 $d2_file \\
+      --samples $samplefile \\
+      --out results_method1 \\
+      --genes $gene_tsv \\
+      --attributes ${params.cli_attribute} \\
+      --cpus ${task.cpus}
     """
 }
 
 
 process METHOD2 {
+    label 'process_medium'
+
     input:
     tuple path(d1_file), path(d2_file), path(samplefile)
 
@@ -85,16 +92,18 @@ process METHOD2 {
 
     script:
     """
-    python /opt/cosmo/method2_function.py \
-        -d1 ${d1_file} \
-        -d2 ${d2_file} \
-        -s ${samplefile} \
-        -l ${params.cli_attribute} \
+    python /opt/cosmo/method2_function.py \\
+        -d1 ${d1_file} \\
+        -d2 ${d2_file} \\
+        -s ${samplefile} \\
+        -l ${params.cli_attribute} \\
         -o method2_folder
     """
 }
 
 process COMBINE {
+    label 'process_medium'
+
     input:
     path(method1_out_folder)
     path(method2_out_folder)
@@ -105,12 +114,13 @@ process COMBINE {
 
     script:
     """
-    cosmo combine 
-      --method-one-out $method1_out_folder 
-      --method-two-out $method2_out_folder 
-      --samples $sample_file \
-      --attributes ${params.cli_attribute} \
-      --prefix cosmo
+    cosmo combine \\
+      --method-one-out $method1_out_folder \\
+      --method-two-out $method2_out_folder \\
+      --samples $sample_file \\
+      --attributes ${params.cli_attribute} \\
+      --prefix cosmo \\
+      --cpus ${task.cpus} \\
       --out .
     """
 }

@@ -5,8 +5,8 @@ library(docopt)
 'COSMO methods.
 
 Usage:
-  cosmo one --d1=<file> --d2=<file> --samples=<file> --genes=<file> [--out=<dir>] [--attributes=<attrs>]
-  cosmo combine --method-one-out=<dir> --method-two-out=<file> --samples=<file> [--attributes=<attrs>] [--prefix <prefix>] [--out=<dir>]
+  cosmo one --d1=<file> --d2=<file> --samples=<file> --genes=<file> [--out=<dir>] [--attributes=<attrs>] [--cpus=<cpus>]
+  cosmo combine --method-one-out=<dir> --method-two-out=<file> --samples=<file> [--attributes=<attrs>] [--prefix <prefix>] [--out=<dir>] [--cpus=<cpus>]
   cosmo (-h | --help)
   cosmo --version
 
@@ -19,10 +19,15 @@ Options:
   -g --genes=<FILE>       TSV of ensembl name, chromosome name, symbol 
   -a --attributes=<attrs> List of attributes (comma-separated) [default: gender,msi]
   -p --prefix=<prefix>    Output files prefix [default: cosmo]
+  -c --cpus=<prefix>      Number of cpus to use for parallel tasks [default: autodetect]
   -o --out=<DIR>          Output directory [default: .]
 ' -> doc
 
 arguments <- docopt(doc, version = 'cosmo v1.0.0')
+
+if(arguments$cpus != 'autodetect') {
+  options('cores' = as.integer(arguments$cpus))
+}
 
 library(missForest)
 library(biomaRt)
