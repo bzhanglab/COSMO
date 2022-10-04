@@ -58,21 +58,20 @@ process PREPROCESS {
 process METHOD1 {
     input:
     tuple path(d1_file), path(d2_file), path(samplefile)
+    path(gene_tsv)
 
     output:
-    path("method1_folder")
+    path("results_method1")
 
     script:
     """
-    #!/usr/bin/env Rscript
-    source("/opt/cosmo/method1_function.R")
-    d1_file <- "${d1_file}"
-    d2_file <- "${d2_file}"
-    sample_file <- "${samplefile}"
-    gene_file <- "/opt/cosmo/genes.tsv"
-    outdir <- "method1_folder"
-    clinical_attributes <- unlist(strsplit(x="${params.cli_attribute}",split=","))
-    run_2b(d1_file, d2_file, sample_file, gene_file, out_dir=outdir, clinical_attributes=clinical_attributes)
+    method1 \
+      --d1 $d1_file \
+      --d2 $d2_file \
+      --samples $samplefile \
+      --out results_method1 \
+      --genes $gene_tsv \
+      --attributes ${params.cli_attribute}
     """
 }
 
@@ -121,8 +120,11 @@ process COMBINE {
 }
 
 workflow {
-    PREPROCESS(d1_file, d2_file, sample_file) 
-    | ( METHOD1 & METHOD2 )
+    genes = Channel.fromPath(params.genes)
+
+    PREPROCESS(d1_file, d2_file, sample_file)
+    METHOD1(PREPROCESS.out, genes)
+    METHOD2(PREPROCESS.out)
 
     COMBINE( METHOD1.out, METHOD2.out, sample_file)
 }

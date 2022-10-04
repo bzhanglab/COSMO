@@ -1,3 +1,6 @@
+#!/usr/bin/env Rscript
+
+library(docopt)
 library(missForest)
 library(biomaRt)
 library(glmnet)
@@ -5,7 +8,30 @@ library(caret)
 library(parallel)
 library(doParallel)
 
+'First COSMO method.
+
+Usage:
+  method1 --d1 <file> --d2 <file> --samples <file> --genes <file> --attributes <attrs> 
+  method1 --d1 <file> --d2 <file> --samples <file> --genes <file> --attributes <attrs> --out <dir>
+  method1 (-h | --help)
+  method1 --version
+
+Options:
+  -h --help            Show this screen.
+  --version            Show version.
+  --d1 <FILE>          Path to d1 file.
+  --d2 <FILE>          Path to d2 file.
+  --samples <FILE>     Samples file
+  --genes <FILE>       TSV of ensembl name, chromosome name, symbol 
+  --attributes <attrs> List of attributes (comma-separated)
+  --out <DIR>          Output directory (default .)
+
+' -> doc
+
 set.seed(2020)
+
+
+
 
 run_2b <- function(d1_file, d2_file, anno_file, gene_file, out_dir="./",
                    clinical_attributes=NA){
@@ -982,4 +1008,21 @@ correctOmicsShifting <- function(traincli, final_tab, dup_shift, cormatrix,
   return(final_tab)
 }
 
+
+arguments <- docopt(doc, version = 'method1 v1.0.0')
+arguments$out <- ifelse(is.null(arguments$out), './', arguments$out)# format_input_data(arguments$d1, arguments$d2, arguments$samples, out_dir = outdir)
+dir.create(path=arguments$out, showWarnings=FALSE, recursive=TRUE)
+
+print(arguments)
+
+clinical_attributes <- unlist(strsplit(x=arguments$attributes, split=","))
+
+run_2b(
+    arguments$d1, 
+    arguments$d2,
+    arguments$samples, 
+    arguments$genes, 
+    out_dir=arguments$out, 
+    clinical_attributes=clinical_attributes
+)
 

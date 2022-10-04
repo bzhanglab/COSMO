@@ -64,7 +64,7 @@ format_input_data <- function(pro_file,rna_file,cli_file,out_dir="./"){
     write.table(x = sam,     file = paste(out_dir,"/",basename(cli_file),sep = ""),quote = FALSE,sep = "\t",row.names = FALSE,col.names = TRUE)
 }
 
-arguments <- docopt(doc, version = 'format_input_data Fate 2.0')
+arguments <- docopt(doc, version = 'format_input_data v1.0')
 arguments$out <- ifelse(is.null(arguments$out), './', arguments$out)# format_input_data(arguments$d1, arguments$d2, arguments$samples, out_dir = outdir)
 dir.create(path=arguments$out, showWarnings=FALSE, recursive=TRUE)
 format_input_data(arguments$d1, arguments$d2, arguments$samples, arguments$out)
