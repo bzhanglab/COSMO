@@ -14,8 +14,8 @@
                 "d1_file",
                 "d2_file",
                 "cli_file",
-                "outdir",
-                "cli_attribute"
+                "cli_attribute",
+                "outdir"
             ],
             "properties": {
                 "d1_file": {
@@ -82,6 +82,21 @@
                         "move"
                     ],
                     "hidden": true
+                },
+                "max_memory": {
+                    "type": "string",
+                    "default": "128.GB",
+                    "description": "Maximum memory used for tasks"
+                },
+                "max_cpus": {
+                    "type": "integer",
+                    "default": 16,
+                    "description": "Maximum number of CPUs used for tasks"
+                },
+                "max_time": {
+                    "type": "string",
+                    "default": "240.h",
+                    "description": "Maximum walltime for tasks"
                 }
             }
         }

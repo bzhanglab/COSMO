@@ -65,7 +65,7 @@ process METHOD1 {
     path(gene_tsv)
 
     output:
-    path("results_method1")
+    path("out/*")
 
     script:
     """
@@ -73,7 +73,7 @@ process METHOD1 {
       --d1 $d1_file \\
       --d2 $d2_file \\
       --samples $samplefile \\
-      --out results_method1 \\
+      --out out \\
       --genes $gene_tsv \\
       --attributes ${params.cli_attribute} \\
       --cpus ${task.cpus}
@@ -88,7 +88,7 @@ process METHOD2 {
     tuple path(d1_file), path(d2_file), path(samplefile)
 
     output:
-    path("method2_folder")
+    path("out/*")
 
     script:
     """
@@ -97,7 +97,7 @@ process METHOD2 {
         -d2 ${d2_file} \\
         -s ${samplefile} \\
         -l ${params.cli_attribute} \\
-        -o method2_folder
+        -o out
     """
 }
 
