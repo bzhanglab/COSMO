@@ -48,19 +48,10 @@ process PREPROCESS {
     path(sample_file)
 
     output:
-    tuple path("data_use/${d1_file.name}"), path("data_use/${d2_file.name}"), path("data_use/${sample_file.name}")
+    tuple path("out/${d1_file.name}"), path("out/${d2_file.name}"), path("out/${sample_file.name}")
 
     script:
-    """
-    #!/usr/bin/env Rscript
-    source("/opt/cosmo/tools.R")
-    d1_file <- "${d1_file}"
-    d2_file <- "${d2_file}"
-    sample_file <- "${sample_file}"
-    outdir <- "data_use"
-    dir.create(outdir)
-    format_input_data(d1_file, d2_file, sample_file, out_dir = outdir)
-    """
+    "format_input_data --d1 $d1_file --d2 $d2_file --samples $sample_file --out out"
 }
 
 

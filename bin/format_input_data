@@ -1,4 +1,26 @@
-format_input_data = function(pro_file,rna_file,cli_file,out_dir="./"){
+#!/usr/bin/env Rscript
+
+library(docopt)
+
+'Format input data.
+
+Usage:
+  format_input_data --d1 <file> --d2 <file> --samples <file> 
+  format_input_data --d1 <file> --d2 <file> --samples <file> --out <dir>
+  format_input_data (-h | --help)
+  format_input_data --version
+
+Options:
+  -h --help         Show this screen.
+  --version         Show version.
+  --d1 <FILE>       Path to d1 file.
+  --d2 <FILE>       Path to d2 file.
+  --samples <FILE>  Samples file
+  --out <DIR>       Output directory
+
+' -> doc
+
+format_input_data <- function(pro_file,rna_file,cli_file,out_dir="./"){
     ## load protein and RNA expression data
     proteome <- read.delim(pro_file, stringsAsFactors = FALSE, check.names = FALSE)
     rnaseq   <- read.delim(rna_file, stringsAsFactors = FALSE, check.names = FALSE)
@@ -41,5 +63,10 @@ format_input_data = function(pro_file,rna_file,cli_file,out_dir="./"){
     write.table(x = rnaseq,  file = paste(out_dir,"/",basename(rna_file),sep = ""),quote = FALSE,sep = "\t",row.names = TRUE,col.names = TRUE)
     write.table(x = sam,     file = paste(out_dir,"/",basename(cli_file),sep = ""),quote = FALSE,sep = "\t",row.names = FALSE,col.names = TRUE)
 }
+
+arguments <- docopt(doc, version = 'format_input_data Fate 2.0')
+arguments$out <- ifelse(is.null(arguments$out), './', arguments$out)# format_input_data(arguments$d1, arguments$d2, arguments$samples, out_dir = outdir)
+dir.create(path=arguments$out, showWarnings=FALSE, recursive=TRUE)
+format_input_data(arguments$d1, arguments$d2, arguments$samples, arguments$out)
 
 
