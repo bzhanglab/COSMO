@@ -32,7 +32,7 @@ if (params.d1_file) { d1_file     = file(params.d1_file)  } else { exit 1, 'No f
 if (params.d1_file) { d2_file     = file(params.d2_file)  } else { exit 1, 'No file specified with --d2_file'  }
 if (params.d1_file) { sample_file = file(params.cli_file) } else { exit 1, 'No file specified with --cli_file' }
 
-outdir       = file(params.outdir)
+outdir = file(params.outdir)
 
 log.info "Sample attribute will be used: $params.cli_attribute \n"
 
@@ -56,7 +56,6 @@ process PREPROCESS {
     "format_input_data --d1 $d1_file --d2 $d2_file --samples $sample_file --out out"
 }
 
-
 process METHOD1 {
     label 'process_medium'
 
@@ -79,7 +78,6 @@ process METHOD1 {
       --cpus ${task.cpus}
     """
 }
-
 
 process METHOD2 {
     label 'process_medium'
