@@ -45,7 +45,7 @@
                 },
                 "genes": {
                     "type": "string",
-                    "default": "assets/genes.human.tsv",
+                    "default": "https://raw.githubusercontent.com/bzhanglab/COSMO/master/assets/genes.human.tsv",
                     "description": "Path to tsv listing with columns ensemble id, chr, symbol"
                 }
             }
