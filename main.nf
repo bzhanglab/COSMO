@@ -64,11 +64,12 @@ process METHOD1 {
     path gene_tsv
 
     output:
-    path "out/*"
+    path "method1_out"
 
     script:
     """
-    cosmo one \\
+    cosmo \\
+        one \\
         --d1 $d1_file \\
         --d2 $d2_file \\
         --samples $samplefile \\
@@ -86,7 +87,7 @@ process METHOD2 {
     tuple path(d1_file), path(d2_file), path(samplefile)
 
     output:
-    path "out/*"
+    path "method2_out"
 
     script:
     """
@@ -112,7 +113,8 @@ process COMBINE {
 
     script:
     """
-    cosmo combine \\
+    cosmo \\
+        combine \\
         --method-one-out $method1_out_folder \\
         --method-two-out $method2_out_folder \\
         --samples $sample_file \\
