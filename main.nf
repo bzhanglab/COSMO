@@ -11,13 +11,12 @@ def helpMessage() {
     Usage:
     nextflow run cosmo.nf
     Arguments:
-      --d1_file               Dataset with quantification data at gene level.
-      --d2_file               Dataset with quantification data at gene level.
-      --cli_file              Sample annotation data.
-      --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
-                              must be separated by ",".
-      --outdir                Output folder".
-      --help                  Print help message.
+      --d1_file         Dataset with quantification data at gene level.
+      --d2_file         Dataset with quantification data at gene level.
+      --cli_file        Sample annotation data.
+      --cli_attribute   Sample attribute(s) for prediction. Multiple attributes must be separated by ",".
+      --outdir          Output folder.
+      --help            Print help message.
     """.stripIndent()
 }
 
@@ -40,9 +39,9 @@ process PREPROCESS {
     label 'process_low'
 
     input:
-    path(d1_file)
-    path(d2_file)
-    path(sample_file)
+    path d1_file
+    path d2_file
+    path sample_file
 
     output:
     tuple path("out/${d1_file.name}"), path("out/${d2_file.name}"), path("out/${sample_file.name}")
@@ -62,10 +61,10 @@ process METHOD1 {
 
     input:
     tuple path(d1_file), path(d2_file), path(samplefile)
-    path(gene_tsv)
+    path gene_tsv
 
     output:
-    path("out/*")
+    path "out/*"
 
     script:
     """
@@ -87,7 +86,7 @@ process METHOD2 {
     tuple path(d1_file), path(d2_file), path(samplefile)
 
     output:
-    path("out/*")
+    path "out/*"
 
     script:
     """
@@ -104,12 +103,12 @@ process COMBINE {
     label 'process_medium'
 
     input:
-    path(method1_out_folder)
-    path(method2_out_folder)
-    path(sample_file)
+    path method1_out_folder
+    path method2_out_folder
+    path sample_file
 
     output:
-    path("cosmo*")
+    path "cosmo*"
 
     script:
     """
