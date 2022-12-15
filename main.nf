@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl = 2
+
 /* Prints help when asked for and exits */
 def helpMessage() {
     log.info"""
