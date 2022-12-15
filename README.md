@@ -35,9 +35,9 @@ nextflow run bzhanglab/COSMO
    --d1_file               Dataset with quantification data at gene level.
    --d2_file               Dataset with quantification data at gene level.
    --cli_file              Sample annotation data.
-   --cli_attribute         Sample attribute(s) for prediction. Multiple attributes
+   --cli_attribute         Sample attribute(s) for prediction. Multiple attributes.
                            must be separated by ",".
-   --outdir               Output folder, default is "./output".
+   --outdir                Output folder.
    --help                  Print help message.
 ```
 
@@ -76,7 +76,7 @@ nextflow run bzhanglab/COSMO --d1_file example_data/test_pro.tsv \
     --d2_file example_data/test_rna.tsv \
     --cli_file example_data/test_cli.tsv \
     --cli_attribute "gender,msi" \
-    --outdir output
+    --outdir ./results
 ```
 The data to run the above example can be found in this folder: "``example_data``".
 

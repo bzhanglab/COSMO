@@ -16,7 +16,7 @@ def helpMessage() {
       --cli_file              Sample annotation data.
       --cli_attribute         Sample attribute(s) for prediction. Multiple attributes 
                               must be separated by ",".
-      --outdir                Output folder, default is "results".
+      --outdir                Output folder".
       --help                  Print help message.
     """.stripIndent()
 }
@@ -34,14 +34,7 @@ if (params.d1_file) { d1_file     = file(params.d1_file)  } else { exit 1, 'No f
 if (params.d1_file) { d2_file     = file(params.d2_file)  } else { exit 1, 'No file specified with --d2_file'  }
 if (params.d1_file) { sample_file = file(params.cli_file) } else { exit 1, 'No file specified with --cli_file' }
 
-outdir = file(params.outdir)
-
 log.info "Sample attribute will be used: $params.cli_attribute \n"
-
-if(!outdir.isDirectory()){
-    outdir = outdir.mkdirs()
-    println outdir ? "Create folder: $outdir!" : "Cannot create directory: $outdir!"
-}
 
 process PREPROCESS {
     label 'process_low'
@@ -55,7 +48,13 @@ process PREPROCESS {
     tuple path("out/${d1_file.name}"), path("out/${d2_file.name}"), path("out/${sample_file.name}")
 
     script:
-    "format_input_data --d1 $d1_file --d2 $d2_file --samples $sample_file --out out"
+    """
+    format_input_data \\
+        --d1 $d1_file \\
+        --d2 $d2_file \\
+        --samples $sample_file \\
+        --out out
+    """
 }
 
 process METHOD1 {
@@ -71,13 +70,13 @@ process METHOD1 {
     script:
     """
     cosmo one \\
-      --d1 $d1_file \\
-      --d2 $d2_file \\
-      --samples $samplefile \\
-      --out out \\
-      --genes $gene_tsv \\
-      --attributes ${params.cli_attribute} \\
-      --cpus ${task.cpus}
+        --d1 $d1_file \\
+        --d2 $d2_file \\
+        --samples $samplefile \\
+        --out out \\
+        --genes $gene_tsv \\
+        --attributes ${params.cli_attribute} \\
+        --cpus ${task.cpus}
     """
 }
 
@@ -115,13 +114,13 @@ process COMBINE {
     script:
     """
     cosmo combine \\
-      --method-one-out $method1_out_folder \\
-      --method-two-out $method2_out_folder \\
-      --samples $sample_file \\
-      --attributes ${params.cli_attribute} \\
-      --prefix cosmo \\
-      --cpus ${task.cpus} \\
-      --out .
+        --method-one-out $method1_out_folder \\
+        --method-two-out $method2_out_folder \\
+        --samples $sample_file \\
+        --attributes ${params.cli_attribute} \\
+        --prefix cosmo \\
+        --cpus ${task.cpus} \\
+        --out .
     """
 }
 
