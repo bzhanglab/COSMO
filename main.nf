@@ -73,7 +73,7 @@ process METHOD1 {
         --d1 $d1_file \\
         --d2 $d2_file \\
         --samples $samplefile \\
-        --out out \\
+        --out method1_out \\
         --genes $gene_tsv \\
         --attributes ${params.cli_attribute} \\
         --cpus ${task.cpus}
@@ -96,7 +96,7 @@ process METHOD2 {
         -d2 ${d2_file} \\
         -s ${samplefile} \\
         -l ${params.cli_attribute} \\
-        -o out
+        -o method2_out
     """
 }
 
