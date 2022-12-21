@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl = 2
+
 /* Prints help when asked for and exits */
 def helpMessage() {
     log.info"""
@@ -90,7 +92,7 @@ process METHOD2 {
 
     script:
     """
-    python /opt/cosmo/method2_function.py \\
+    method2_function.py \\
         -d1 ${d1_file} \\
         -d2 ${d2_file} \\
         -s ${samplefile} \\
