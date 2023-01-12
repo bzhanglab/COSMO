@@ -20,25 +20,21 @@
             "properties": {
                 "d1_file": {
                     "type": "string",
-                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
-                    "mimetype": "text/tab-separated-values"
+                    "mimetype": "text/tsv"
                 },
                 "d2_file": {
                     "type": "string",
-                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
-                    "mimetype": "text/tab-separated-values"
+                    "mimetype": "text/tsv"
                 },
                 "cli_file": {
                     "type": "string",
-                    "default": "None",
                     "fa_icon": "fas fa-file-csv",
-                    "mimetype": "text/tab-separated-values"
+                    "mimetype": "text/tsv"
                 },
                 "cli_attribute": {
                     "type": "string",
-                    "default": "None",
                     "fa_icon": "fas fa-book"
                 },
                 "outdir": {
@@ -49,7 +45,7 @@
                 },
                 "genes": {
                     "type": "string",
-                    "default": "assets/genes.human.tsv",
+                    "default": "https://raw.githubusercontent.com/bzhanglab/COSMO/master/assets/genes.human.tsv",
                     "description": "Path to tsv listing with columns ensemble id, chr, symbol"
                 }
             }
