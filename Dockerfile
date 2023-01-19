@@ -1,9 +1,5 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_12
-
-
-MAINTAINER wenbostar@gmail.com
-
-
+MAINTAINER zhiao.shi@gmail.com
 ARG PYTHON=python3
 ARG PIP=pip3
 
@@ -37,26 +33,11 @@ RUN apt-get update && \
     libexpat-dev && \
     apt-get clean
 
-
-
-
-
-ADD install.R /tmp/
-
-RUN R -f /tmp/install.R
-
 RUN echo "R_LIBS=/usr/local/lib/R/host-site-library:\${R_LIBS}" > /usr/local/lib/R/etc/Renviron.site
 RUN echo "R_LIBS_USER=''" >> /usr/local/lib/R/etc/Renviron.site
 RUN echo "options(defaultPackages=c(getOption('defaultPackages'),'BiocManager'))" >> /usr/local/lib/R/etc/Rprofile.site
-
-RUN chmod -R 755 /opt/
-
-ADD cosmo /opt/cosmo
-
-#change working directory
-WORKDIR /opt/
+RUN R -e 'install.packages(c("missForest", "glmnet", "caret", "doParallel", "dbplyr", "randomforest"))'
+RUN R -e 'BiocManager::install("biomaRt")'
 
 #specify the command executed when the container is started
 CMD ["/bin/bash"]
-
-
