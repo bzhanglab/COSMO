@@ -1,5 +1,43 @@
-FROM rocker/r-ver:4	
+FROM bioconductor/bioconductor_docker:RELEASE_3_12
+MAINTAINER zhiao.shi@gmail.com
+ARG PYTHON=python3
+ARG PIP=pip3
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-sklearn
+# See http://bugs.python.org/issue19846
+ENV LANG C.UTF-8
+
+RUN  rm -f /var/lib/dpkg/available && rm -rf  /var/cache/apt/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    wget \
+    unzip \
+    pkg-config \
+    curl \
+    ${PYTHON} \
+    ${PYTHON}-pip && \
+    apt-get clean
+
+RUN ${PIP} install --upgrade pip
+RUN ${PIP} install --upgrade setuptools
+
+RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
+
+RUN ${PIP} install numpy pandas matplotlib seaborn scikit-learn
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get -y  install --fix-missing tcl8.6-dev \
+    tk \
+    expat \
+    libexpat-dev && \
+    apt-get clean
+
+RUN echo "R_LIBS=/usr/local/lib/R/host-site-library:\${R_LIBS}" > /usr/local/lib/R/etc/Renviron.site
+RUN echo "R_LIBS_USER=''" >> /usr/local/lib/R/etc/Renviron.site
+RUN echo "options(defaultPackages=c(getOption('defaultPackages'),'BiocManager'))" >> /usr/local/lib/R/etc/Rprofile.site
 RUN R -e 'install.packages(c("missForest", "glmnet", "caret", "doParallel", "dbplyr", "randomforest"))'
-RUN R -e 'if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("biomaRt"); '
+RUN R -e 'BiocManager::install("biomaRt")'
+
+#specify the command executed when the container is started
+CMD ["/bin/bash"]
