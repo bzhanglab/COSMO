@@ -114,11 +114,11 @@ def run(d1_file:str, d2_file:str, sample_file:str, sample_labels, out_dir="./", 
 
     # to be used features/genes, remove highly correlated ones
     corr_matrix = test_d1.loc[:, test_d1.columns[test_d1.nunique() > 1].tolist()].corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
     use_pro = [column for column in upper.columns if any(upper[column] <= 0.9)]
 
     corr_matrix = test_d2.loc[:, test_d2.columns[test_d2.nunique() > 1].tolist()].corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
     use_rna = [column for column in upper.columns if any(upper[column] <= 0.9)]
 
     del corr_matrix
