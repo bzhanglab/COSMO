@@ -129,14 +129,14 @@ def run(d1_file:str, d2_file:str, sample_file:str, sample_labels, out_dir="./", 
                                 solver='liblinear',
                                 max_iter=5000)
     clf3 = Pipeline([
-        ('feature_selection', GenericUnivariateSelect(f_classif, 'fdr', param=0.1)),
+        ('feature_selection', GenericUnivariateSelect(f_classif, mode='fdr', param=0.1)),
         ('classification', SVC(gamma='auto', C=1.3, kernel="rbf",
                                probability=True, class_weight='balanced',
                                max_iter=1000))
     ])
     clf6 = LogisticRegressionCV(cv=5, penalty='l2', class_weight='balanced')
     clf8 = Pipeline([
-        ('feature_selection', GenericUnivariateSelect(f_classif, 'fdr', param=0.1)),
+        ('feature_selection', GenericUnivariateSelect(f_classif, mode='fdr', param=0.1)),
         ('classification', KNeighborsClassifier(n_neighbors=20,
                                                 weights='distance',
                                                 ))
