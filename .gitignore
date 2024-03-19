@@ -1,3 +1,19 @@
+# Hidden files and directories
+.*.swp
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.iml
+
+# General
+*.log
+*.tmp
+*.tmp.*
+tmp
+
 results
 work
 .nextflow*
